@@ -21,7 +21,7 @@ DEPS      := $(subst .cpp,.d,$(DEPS))
 
 TARGET    = $(BUILD_DIR)/main.a
 
-.PHONY: all clean
+.PHONY: all run clean
 
 all: $(TARGET)
 
@@ -39,6 +39,9 @@ $(BUILD_DIR)/%.d: $(SRC_DIR)/%.cpp
 	$(CXX) -MM $(CXXFLAGS) $(INCLUDES) $< | sed -e 's~\($*\)\.o: *~$(BUILD_DIR)/\1.o $@ : ~g' > $@
 
 -include $(DEPS)
+
+run:
+	$(TARGET) ../rgb_image.png 500 500
 
 clean:
 	rm $(BUILD_DIR) -rf
