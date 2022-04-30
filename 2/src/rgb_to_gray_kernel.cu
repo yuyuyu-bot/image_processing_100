@@ -3,8 +3,7 @@
 #include "rgb_to_gray_cuda.hpp"
 
 
-namespace
-{
+namespace {
 
 __global__ void rgb_to_gray_kernel(const std::uint8_t* src, std::uint8_t* dst,
                                    const std::size_t width, const std::size_t height) {
@@ -29,4 +28,4 @@ void rgb_to_gray(const std::uint8_t* src, std::uint8_t* dst,
     rgb_to_gray_kernel<<<height, width>>>(src, dst, width, height);
 }
 
-}
+}  // namespace cuda
