@@ -26,12 +26,12 @@ int main(int argc, char** argv) {
     const Image<IMG_T, 3> src_img(argv[1], width, height);
     const auto src = src_img.data();
 
-    Image<IMG_T, 1> dst_cpu(width, height);
+    Image<IMG_T, 1> dst_cpp(width, height);
     Image<IMG_T, 1> dst_neon(width, height);
     Image<IMG_T, 1> dst_cuda(width, height);
 
     {
-        const auto dst = dst_cpu.data();
+        const auto dst = dst_cpp.data();
         const auto duration = measure(iteration, cpp::rgb_to_gray, src, dst, width, height);
         std::cout << "durations:" << std::endl;
         std::cout << "\tcpp : " << duration << " [usec]" << std::endl;
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         const auto duration = measure(iteration, neon::rgb_to_gray, src, dst, width, height);
         std::cout << "\tneon: " << duration << " [usec]" << std::endl;
 
-        compare_images(dst_cpu, dst_neon);
+        compare_images(dst_cpp, dst_neon);
     }
 
     {
@@ -59,10 +59,10 @@ int main(int argc, char** argv) {
         cudaFree((void*)d_src);
         cudaFree((void*)d_dst);
 
-        compare_images(dst_cpu, dst_cuda);
+        compare_images(dst_cpp, dst_cuda);
     }
 
-    dst_cpu.write("cpp.png");
+    dst_cpp.write("cpp.png");
     dst_neon.write("neon.png");
     dst_cuda.write("cuda.png");
 
