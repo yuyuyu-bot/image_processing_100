@@ -29,19 +29,33 @@ public:
         data_(std::make_unique<IMG_T[]>(width * height * CH)),
         width_(width), height_(height), stride_(width * CH) {
         static_assert(std::is_same_v<IMG_T, std::uint8_t>);
-        static_assert(CH == 3);
+        static_assert(CH == 1 || CH == 3);
 
-        png::image<png::rgb_pixel> image(filename);
-        assert(width == image.get_width());
-        assert(height == image.get_height());
+        if constexpr (CH == 1) {
+            png::image<png::gray_pixel> image(filename);
+            assert(width == image.get_width());
+            assert(height == image.get_height());
 
-        for (std::size_t y = 0; y < height_; y++) {
-            const auto src_row = image[y];
-            const auto dst_row = this->get_row(y);
-            for (std::size_t x = 0; x < width_; x++) {
-                dst_row[x * CH + 0] = src_row.at(x).red;
-                dst_row[x * CH + 1] = src_row.at(x).green;
-                dst_row[x * CH + 2] = src_row.at(x).blue;
+            for (std::size_t y = 0; y < height_; y++) {
+                const auto src_row = image[y];
+                const auto dst_row = this->get_row(y);
+                for (std::size_t x = 0; x < width_; x++) {
+                    dst_row[x] = src_row[x];
+                }
+            }
+        } else {
+            png::image<png::rgb_pixel> image(filename);
+            assert(width == image.get_width());
+            assert(height == image.get_height());
+
+            for (std::size_t y = 0; y < height_; y++) {
+                const auto src_row = image[y];
+                const auto dst_row = this->get_row(y);
+                for (std::size_t x = 0; x < width_; x++) {
+                    dst_row[x * CH + 0] = src_row.at(x).red;
+                    dst_row[x * CH + 1] = src_row.at(x).green;
+                    dst_row[x * CH + 2] = src_row.at(x).blue;
+                }
             }
         }
     }
