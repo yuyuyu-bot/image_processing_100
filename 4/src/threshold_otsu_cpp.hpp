@@ -22,7 +22,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
     const auto mean_all = static_cast<float>(value_sum) / (width * height);
 
     auto maxS = 0.f;
-    auto thresh = 0;
+    auto thresh = std::uint8_t{0};
     auto n1 = 0, n2 = static_cast<int>(width * height);
     auto sum1 = 0ull, sum2 = value_sum;
     auto square_sum1 = 0ull, square_sum2 = square_value_sum;

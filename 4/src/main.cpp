@@ -7,7 +7,7 @@
 
 #include "common.hpp"
 #include "threshold_otsu_cpp.hpp"
-// #include "threshold_otsu_cuda.hpp"
+#include "threshold_otsu_cuda.hpp"
 // #include "threshold_otsu_neon.hpp"
 
 
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    constexpr auto iteration = 1;
+    constexpr auto iteration = 10;
 
     using IMG_T = std::uint8_t;
 
@@ -41,29 +41,32 @@ int main(int argc, char** argv) {
     // {
     //     const auto dst = dst_neon.data();
     //     const auto duration =
-    //         measure(iteration, neon::threshold_otsu, src, dst, width, height, thresh);
+    //         measure(iteration, neon::threshold_otsu, src, dst, width, height);
     //     std::cout << "\tneon: " << duration << " [usec]" << std::endl;
 
     //     compare_images(dst_cpp, dst_neon);
     // }
 
-    // {
-    //     IMG_T* d_src;
-    //     IMG_T* d_dst;
-    //     cudaMalloc((void**)&d_src, width * height * sizeof(IMG_T));
-    //     cudaMalloc((void**)&d_dst, width * height * sizeof(IMG_T));
-    //     cudaMemcpy(d_src, src, width * height * sizeof(IMG_T), cudaMemcpyHostToDevice);
+    {
+        IMG_T* d_src;
+        IMG_T* d_dst;
+        int* d_histogram_buffer;
+        cudaMalloc((void**)&d_src, width * height * sizeof(IMG_T));
+        cudaMalloc((void**)&d_dst, width * height * sizeof(IMG_T));
+        cudaMalloc((void**)&d_histogram_buffer, 256 * sizeof(int));
+        cudaMemcpy(d_src, src, width * height * sizeof(IMG_T), cudaMemcpyHostToDevice);
 
-    //     const auto duration =
-    //         measure(iteration, cuda::threshold_otsu, d_src, d_dst, width, height, thresh);
-    //     std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
+        const auto duration =
+            measure(iteration, cuda::threshold_otsu, d_src, d_dst, width, height, d_histogram_buffer);
+        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
 
-    //     cudaMemcpy(dst_cuda.data(), d_dst, width * height * sizeof(IMG_T), cudaMemcpyDeviceToHost);
-    //     cudaFree((void*)d_src);
-    //     cudaFree((void*)d_dst);
+        cudaMemcpy(dst_cuda.data(), d_dst, width * height * sizeof(IMG_T), cudaMemcpyDeviceToHost);
+        cudaFree((void*)d_src);
+        cudaFree((void*)d_dst);
+        cudaFree((void*)d_histogram_buffer);
 
-    //     compare_images(dst_cpp, dst_cuda);
-    // }
+        compare_images(dst_cpp, dst_cuda);
+    }
 
     dst_cpp.write("cpp.png");
     dst_neon.write("neon.png");

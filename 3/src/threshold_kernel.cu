@@ -14,12 +14,9 @@ __global__ void threshold_kernel(const std::uint8_t* const src, std::uint8_t* co
                                  const std::uint8_t thresh, const int pixel_per_thread) {
     const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-    for (int i = 0; i < pixel_per_thread; i++) {
-        const auto j = idx * pixel_per_thread + i;
-        if (j >= width * height) {
-            break;
-        }
-        dst[j] = src[j] < thresh ? min_value : max_value;
+    const auto end = min((idx + 1) * pixel_per_thread , static_cast<int>(width * height));
+    for (int i = idx * pixel_per_thread; i < end; i++) {
+        dst[i] = src[i] < thresh ? min_value : max_value;
     }
 }
 
