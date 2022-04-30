@@ -16,6 +16,9 @@ OBJS       = $(subst $(SRC_DIR),$(BUILD_DIR),$(SRCS))
 OBJS      := $(subst .cpp,.o,$(OBJS))
 OBJS      := $(subst .cu,.o,$(OBJS))
 
+DEPS       = $(subst $(SRC_DIR),$(BUILD_DIR),$(SRCS))
+DEPS      := $(subst .cpp,.d,$(DEPS))
+
 TARGET    = $(BUILD_DIR)/main.a
 
 .PHONY: all clean
@@ -26,11 +29,16 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $< -c -o $@
 
 $(SRC_DIR)/%.cpp: $(SRC_DIR)/%.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $< --cuda -o $@
+
+$(BUILD_DIR)/%.d: $(SRC_DIR)/%.cpp
+	[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
+	$(CXX) -MM $(CXXFLAGS) $(INCLUDES) $< | sed -e 's~\($*\)\.o: *~$(BUILD_DIR)/\1.o $@ : ~g' > $@
+
+-include $(DEPS)
 
 clean:
 	rm $(BUILD_DIR) -rf
