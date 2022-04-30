@@ -107,6 +107,26 @@ private:
 };
 
 
+template <typename IMG_T, int CH>
+void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
+                    bool details = false){
+    const auto size = img1.width() * img2.height() * CH;
+    auto max_diff = 0;
+    for (std::size_t i = 0; i < size; i++) {
+        const auto expected = static_cast<int>(img1.data()[i]);
+        const auto actual = static_cast<int>(img2.data()[i]);
+        const auto diff = std::abs(expected - actual);
+        max_diff = std::max(max_diff, diff);
+        if (details && diff > 0) {
+            std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
+        }
+    }
+    if (max_diff > 0) {
+        std::cout << "max diff: " << max_diff << std::endl;
+    }
+}
+
+
 template <class Fn, class... Args>
 auto measure(const std::uint32_t N, Fn& fn, const Args&... args) {
     auto accumulator = 0ll;
