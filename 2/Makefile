@@ -1,32 +1,36 @@
-CXX = g++
-CXXFLAGS = -Wall -Wextra -O3 -std=c++17
+CXX        = g++
+CXXFLAGS  := -Wall -Wextra -O3 -std=c++17 -mssse3
+CXXFLAGS  += -Wno-deprecated-declarations -Wno-unknown-pragmas
 
-NVCC=nvcc
-NVCCFLAGS = -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
+NVCC      := nvcc
+NVCCFLAGS := -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
 
-INCLUDE = -I../inc -I/usr/local/cuda/include
-LDFLAGS = -L/usr/local/cuda/lib64 -lcudart -lpng
+INCLUDES  := -I../inc -I/usr/local/cuda/include -I../3rdparty/neon2sse
+LDFLAGS   := -L/usr/local/cuda/lib64 -lcudart -lpng
 
-CPP_SRC = main.cpp
-CPP_OBJ = build/main.o
-TARGET = build/main.a
+SRC_DIR   := src
+SRCS       = $(shell find $(SRC_DIR) -name "*.cu" -o -name "*.cpp")
+BUILD_DIR := build
 
-CUDA_SRC = cuda_kernel.cu
-CUDA_OBJ = build/cuda_kernel.o
-TARGET = build/main.a
+OBJS       = $(subst $(SRC_DIR),$(BUILD_DIR),$(SRCS))
+OBJS      := $(subst .cpp,.o,$(OBJS))
+OBJS      := $(subst .cu,.o,$(OBJS))
 
+TARGET    = $(BUILD_DIR)/main.a
+
+.PHONY: all clean
 
 all: $(TARGET)
 
-$(TARGET): $(CUDA_OBJ) $(CPP_OBJ)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $^ $(LDFLAGS)
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
-$(CUDA_OBJ): $(CUDA_SRC)
-	mkdir -p build
-	$(NVCC) $(NVCCFLAGS) $(INCLUDE) -o $@ -c $^
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $< -c -o $@
 
-$(CPP_OBJ): $(CPP_SRC)
-	mkdir -p build
-	$(NVCC) $(NVCCFLAGS) $(INCLUDE) -o $@ -c $^
+$(SRC_DIR)/%.cpp: $(SRC_DIR)/%.cu
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $< --cuda -o $@
+
 clean:
-	rm build -rf
+	rm $(BUILD_DIR) -rf
