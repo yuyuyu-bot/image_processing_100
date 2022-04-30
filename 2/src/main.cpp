@@ -7,9 +7,9 @@
 #include <thrust/device_vector.h>
 
 #include "common.hpp"
-#include "cpp.hpp"
-#include "cuda.hpp"
-#include "neon.hpp"
+#include "rgb_to_gray_cpp.hpp"
+#include "rgb_to_gray_cuda.hpp"
+#include "rgb_to_gray_neon.hpp"
 
 int main(int argc, char** argv) {
     if (argc != 4) {

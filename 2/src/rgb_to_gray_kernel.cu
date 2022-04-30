@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
-#include "cuda.hpp"
+
+#include "rgb_to_gray_cuda.hpp"
 
 
 namespace
