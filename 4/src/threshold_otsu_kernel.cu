@@ -27,15 +27,12 @@ __global__ void construct_histrogram_kernel(
         histogram_local[value]++;
     }
 
-    const auto warp_num = static_cast<int>(ceilf(blockDim.x / 32.f));
-    const auto lane_idx = blockDim.x % 32;
+    const auto lane_idx = tid % 32;
 
     for (int arr_idx = 0; arr_idx < 256; arr_idx++) {
-        for (int delta = 1; delta < warp_num; delta <<= 1) {
+        for (std::uint32_t delta = 1; delta < 32; delta <<= 1) {
             const auto tmp = __shfl_down_sync(0xffffffff, histogram_local[arr_idx], delta);
-            if (tid + delta < blockDim.x) {
-                histogram_local[arr_idx] += tmp;
-            }
+            histogram_local[arr_idx] += tmp;
         }
     }
 
@@ -149,21 +146,10 @@ __global__ void threshold_otsu_kernel(
             max_S = s_S_buffer[i];
             max_S_idx = s_S_idx_buffer[i];
         }
-        // if (blockDim.x * blockIdx.x + threadIdx.x == 0) {
-        //     printf("%f,  %d,  %ld\n", s_S_buffer[i], s_S_idx_buffer[i], value_sum);
-        // }
     }
     const auto thresh = max_S_idx;
 
     const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-    // for (int i = 0; i < 1; i++) {
-    //     if (idx == i) {
-    //         printf("%d\n", thresh);
-    //     }
-    //     __syncthreads();
-    // }
-
     const auto end = min((idx + 1) * pixel_per_thread , static_cast<int>(width * height));
     for (int i = idx * pixel_per_thread; i < end; i++) {
         dst[i] = src[i] < thresh ? min_value : max_value;
@@ -179,7 +165,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
                     const std::size_t width, const std::size_t height,
                     int* const histogram_buffer) {
     {
-        constexpr auto block_dim = dim3{128};
+        constexpr auto block_dim = dim3{8};
         constexpr auto thread_dim = dim3{32};
         constexpr auto num_threads = block_dim.x * thread_dim.x;
         const auto pixel_per_block =
@@ -192,7 +178,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
 
     {
         constexpr auto block_dim = dim3{32};
-        constexpr auto thread_dim = dim3{256};
+        constexpr auto thread_dim = dim3{256};  // must be 256
         constexpr auto num_threads = block_dim.x * thread_dim.x;
         const auto pixel_per_block =
             static_cast<int>(ceilf(static_cast<float>(width * height) / num_threads));
@@ -200,14 +186,6 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
         threshold_otsu_kernel<<<block_dim, thread_dim>>>(
             src, dst, width, height, histogram_buffer, pixel_per_block);
     }
-
-    // int histogram[256];
-    // cudaMemcpy((void*)histogram, (void*)histogram_buffer, 256 * sizeof(int), cudaMemcpyDeviceToHost);
-    // int sum = 0;
-    // for (int i = 0; i < 256; i++) {
-    //     sum += histogram[i];
-    // }
-    // printf("%d\n", sum);
 }
 
 }  // namespace cuda
