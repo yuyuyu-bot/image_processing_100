@@ -14,7 +14,7 @@ __global__ void rgb_to_hsv_kernel(const std::uint8_t* const src, std::uint8_t* c
     const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
 
     const auto end = min((idx + 1) * pixel_per_thread , static_cast<int>(width * height));
-    for (int i = idx; i < end; i++) {
+    for (int i = idx * pixel_per_thread; i < end; i++) {
         const auto R = src[i * 3 + 0];
         const auto G = src[i * 3 + 1];
         const auto B = src[i * 3 + 2];

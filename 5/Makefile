@@ -1,9 +1,9 @@
 CXX        = g++
 CXXFLAGS  := -Wall -Wextra -O3 -std=c++17 -mssse3
-CXXFLAGS  += -Wno-deprecated-declarations -Wno-unknown-pragmas -g
+CXXFLAGS  += -Wno-deprecated-declarations -Wno-unknown-pragmas
 
 NVCC      := nvcc
-NVCCFLAGS := -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false -g
+NVCCFLAGS := -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
 
 INCLUDES  := -I../inc -I/usr/local/cuda/include -I../3rdparty/neon2sse
 LDFLAGS   := -L/usr/local/cuda/lib64 -lcudart -lpng
@@ -41,7 +41,7 @@ $(BUILD_DIR)/%.d: $(SRC_DIR)/%.cpp
 -include $(DEPS)
 
 run:
-	$(TARGET) ../rgb_image_5000x5000.png 5000 5000
+	$(TARGET) ../rgb_image.png 500 500
 
 clean:
 	rm $(BUILD_DIR) -rf
