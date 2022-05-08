@@ -23,34 +23,73 @@ void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
         const uint8x16_t&& v_vmax = vmaxq_u8(v_R, vmaxq_u8(v_G, v_B));
         const uint8x16_t&& v_vmin = vminq_u8(v_R, vminq_u8(v_G, v_B));
 
-        std::uint8_t a_R[16], a_G[16], a_B[16], a_vmax[16], a_vmin[16];
-        std::memcpy(a_R, &v_R, sizeof(uint8x16_t));
-        std::memcpy(a_G, &v_G, sizeof(uint8x16_t));
-        std::memcpy(a_B, &v_B, sizeof(uint8x16_t));
-        std::memcpy(a_vmax, &v_vmax, sizeof(uint8x16_t));
-        std::memcpy(a_vmin, &v_vmin, sizeof(uint8x16_t));
-        std::uint8_t a_H[16], a_S[16], a_V[16];
-        for (int j = 0; j < 16; j++) {
-            int H;
-            if (a_vmin[j] == a_vmax[j]) {
-                H = 0;
-            } else if (a_vmin[j] == a_B[j]) {
-                H = 60 * (a_G[j] - a_R[j]) / (a_vmax[j] - a_vmin[j]) + 60;
-            } else if (a_vmin[j] == a_R[j]) {
-                H = 60 * (a_B[j] - a_G[j]) / (a_vmax[j] - a_vmin[j]) + 180;
-            } else {
-                H = 60 * (a_R[j] - a_B[j]) / (a_vmax[j] - a_vmin[j]) + 300;
-            }
+        const uint8x16_t&& v_zero_flag = vceqq_u8(v_vmax, v_vmin);
+        const uint8x16_t&& v_B_flag = vceqq_u8(v_vmin, v_B);
+        const uint8x16_t&& v_R_flag = vceqq_u8(v_vmin, v_R);
 
-            a_H[j] = static_cast<std::uint8_t>(H / 360.f * 255.f);
-            a_S[j] = a_vmax[j] - a_vmin[j];
-            a_V[j] = a_vmax[j];
-        }
+        const uint8x16_t&& v_vrange = vsubq_u8(v_vmax, v_vmin);
+        const auto&& v_vrange_u16_l = vmovl_u8(vget_low_u8(v_vrange));
+        const auto&& v_vrange_u16_h = vmovl_u8(vget_high_u8(v_vrange));
+        const auto&& v_vrange_recp_f32_l_l =
+            vrecpeq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(v_vrange_u16_l))));
+        const auto&& v_vrange_recp_f32_l_h =
+            vrecpeq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(v_vrange_u16_l))));
+        const auto&& v_vrange_recp_f32_h_l =
+            vrecpeq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(v_vrange_u16_h))));
+        const auto&& v_vrange_recp_f32_h_h =
+            vrecpeq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(v_vrange_u16_h))));
 
-        uint8x16_t v_H, v_S, v_V;
-        std::memcpy(&v_H, a_H, sizeof(uint8x16_t));
-        std::memcpy(&v_S, a_S, sizeof(uint8x16_t));
-        std::memcpy(&v_V, a_V, sizeof(uint8x16_t));
+        const auto compute_H = [
+            &v_vrange_recp_f32_l_l, &v_vrange_recp_f32_l_h, &v_vrange_recp_f32_h_l,
+            &v_vrange_recp_f32_h_h](const uint8x16_t v1, const uint8x16_t v2, const float offset) {
+                const auto&& v1_u16_l = vmovl_u8(vget_low_u8(v1));
+                const auto&& v1_u16_h = vmovl_u8(vget_high_u8(v1));
+                const auto&& v2_u16_l = vmovl_u8(vget_low_u8(v2));
+                const auto&& v2_u16_h = vmovl_u8(vget_high_u8(v2));
+
+                const auto&& numer_s16_l = vmulq_n_s16(vsubq_s16(v1_u16_l, v2_u16_l), 60);
+                const auto&& numer_s16_h = vmulq_n_s16(vsubq_s16(v1_u16_h, v2_u16_h), 60);
+                const auto&& numer_f32_l_l = vcvtq_f32_s32(vmovl_s16(vget_low_s16(numer_s16_l)));
+                const auto&& numer_f32_l_h = vcvtq_f32_s32(vmovl_s16(vget_high_s16(numer_s16_l)));
+                const auto&& numer_f32_h_l = vcvtq_f32_s32(vmovl_s16(vget_low_s16(numer_s16_h)));
+                const auto&& numer_f32_h_h = vcvtq_f32_s32(vmovl_s16(vget_high_s16(numer_s16_h)));
+
+                constexpr auto normalize_term = 255.f / 360.f;
+                const auto compute_H_s32 = [](const float32x4_t& v1, const float32x4_t& v2,
+                                              const float32x4_t& v3) {
+                    return vcvtq_s32_f32(
+                        vmulq_n_f32(vaddq_f32(vmulq_f32(v1, v2), v3), normalize_term));
+                };
+
+                const auto&& v_offset = vdupq_n_f32(offset);
+                const auto&& v_H_s32_l_l = compute_H_s32(numer_f32_l_l, v_vrange_recp_f32_l_l,
+                                                         v_offset);
+                const auto&& v_H_s32_l_h = compute_H_s32(numer_f32_l_h, v_vrange_recp_f32_l_h,
+                                                         v_offset);
+                const auto&& v_H_s32_h_l = compute_H_s32(numer_f32_h_l, v_vrange_recp_f32_h_l,
+                                                         v_offset);
+                const auto&& v_H_s32_h_h = compute_H_s32(numer_f32_h_h, v_vrange_recp_f32_h_h,
+                                                         v_offset);
+
+                const auto&& v_H_s16_l = vcombine_s16(vmovn_s32((v_H_s32_l_l)),
+                                                      vmovn_s32((v_H_s32_l_h)));
+                const auto&& v_H_s16_h = vcombine_s16(vmovn_s32((v_H_s32_h_l)),
+                                                      vmovn_s32((v_H_s32_h_h)));
+
+                return vcombine_u8(vmovn_u16(v_H_s16_l), vmovn_u16(v_H_s16_h));
+            };
+
+        const uint8x16_t&& v_zero_value = vdupq_n_u8(0);
+        const uint8x16_t&& v_B_value = compute_H(v_G, v_R, 60);
+        const uint8x16_t&& v_R_value = compute_H(v_B, v_G, 180);
+        const uint8x16_t&& v_G_value = compute_H(v_R, v_B, 300);
+
+        uint8x16_t&& v_H = vbslq_u8(v_zero_flag, v_zero_value, v_G_value);
+        v_H = vbslq_u8(v_B_flag, v_B_value, v_H);
+        v_H = vbslq_u8(v_R_flag, v_R_value, v_H);
+
+        const uint8x16_t v_S = vsubq_u16(v_vmax, v_vmin);
+        const uint8x16_t v_V = v_vmax;
         const uint8x16x3_t v_HSV{v_H, v_S, v_V};
         vst3q_u8(dst_ptr, v_HSV);
 
