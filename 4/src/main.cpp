@@ -2,10 +2,9 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
 
 #include "common.hpp"
+#include "device_buffer.hpp"
 #include "threshold_otsu_cpp.hpp"
 #include "threshold_otsu_cuda.hpp"
 #include "threshold_otsu_neon.hpp"
@@ -48,23 +47,15 @@ int main(int argc, char** argv) {
     }
 
     {
-        IMG_T* d_src;
-        IMG_T* d_dst;
-        int* d_histogram_buffer;
-        cudaMalloc((void**)&d_src, width * height * sizeof(IMG_T));
-        cudaMalloc((void**)&d_dst, width * height * sizeof(IMG_T));
-        cudaMalloc((void**)&d_histogram_buffer, 256 * sizeof(int));
-        cudaMemcpy(d_src, src, width * height * sizeof(IMG_T), cudaMemcpyHostToDevice);
+        device_buffer<IMG_T> d_src(width * height, src);
+        device_buffer<IMG_T> d_dst(width * height);
+        device_buffer<int> d_histogram_buffer(256);
 
-        const auto duration =
-            measure(iteration, cuda::threshold_otsu, d_src, d_dst, width, height, d_histogram_buffer);
+        const auto duration = measure(iteration, cuda::threshold_otsu, d_src.get(), d_dst.get(),
+                                      width, height, d_histogram_buffer.get());
         std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
 
-        cudaMemcpy(dst_cuda.data(), d_dst, width * height * sizeof(IMG_T), cudaMemcpyDeviceToHost);
-        cudaFree((void*)d_src);
-        cudaFree((void*)d_dst);
-        cudaFree((void*)d_histogram_buffer);
-
+        d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);
     }
 

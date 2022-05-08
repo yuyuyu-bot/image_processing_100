@@ -2,10 +2,9 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
 
 #include "common.hpp"
+#include "device_buffer.hpp"
 #include "threshold_cpp.hpp"
 #include "threshold_cuda.hpp"
 #include "threshold_neon.hpp"
@@ -47,20 +46,14 @@ int main(int argc, char** argv) {
     }
 
     {
-        IMG_T* d_src;
-        IMG_T* d_dst;
-        cudaMalloc((void**)&d_src, width * height * sizeof(IMG_T));
-        cudaMalloc((void**)&d_dst, width * height * sizeof(IMG_T));
-        cudaMemcpy(d_src, src, width * height * sizeof(IMG_T), cudaMemcpyHostToDevice);
+        device_buffer<IMG_T> d_src(width * height, src);
+        device_buffer<IMG_T> d_dst(width * height);
 
-        const auto duration =
-            measure(iteration, cuda::threshold, d_src, d_dst, width, height, thresh);
+        const auto duration = measure(iteration, cuda::threshold, d_src.get(), d_dst.get(), width,
+                                      height, thresh);
         std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
 
-        cudaMemcpy(dst_cuda.data(), d_dst, width * height * sizeof(IMG_T), cudaMemcpyDeviceToHost);
-        cudaFree((void*)d_src);
-        cudaFree((void*)d_dst);
-
+        d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);
     }
 

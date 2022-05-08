@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <numeric>
 
+#include "cuda_safe_call.hpp"
 #include "threshold_otsu_cuda.hpp"
 
 
@@ -185,6 +186,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
 
         threshold_otsu_kernel<<<block_dim, thread_dim>>>(
             src, dst, width, height, histogram_buffer, pixel_per_block);
+        CUDASafeCall();
     }
 }
 

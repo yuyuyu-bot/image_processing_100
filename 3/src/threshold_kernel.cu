@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include <numeric>
 
+#include "cuda_safe_call.hpp"
 #include "threshold_cuda.hpp"
 
 
@@ -34,6 +35,7 @@ void threshold(const std::uint8_t* const src, std::uint8_t* const dst,
     );
 
     threshold_kernel<<<grid_dim, block_dim>>>(src, dst, width, height, thresh, pixel_per_thread);
+    CUDASafeCall();
 }
 
 }  // namespace cuda
