@@ -1,17 +1,17 @@
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <utility>
+
+#include "NEON_2_SSE.h"
 
 
-namespace cpp {
+namespace neon {
 
 void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
                     const std::size_t width, const std::size_t height) {
     constexpr auto min_value = std::numeric_limits<std::uint8_t>::min();
     constexpr auto max_value = std::numeric_limits<std::uint8_t>::max();
-
-    // TODO: NEON histogram
 
     auto histogram = std::array<int, max_value - min_value + 1>();
     auto value_sum = 0ull;
@@ -57,9 +57,23 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
         }
     }
 
-    for (std::size_t i = 0; i < width * height; i++) {
+    auto src_ptr = src;
+    auto dst_ptr = dst;
+
+    constexpr auto vector_size = sizeof(uint8x16_t) / sizeof(std::uint8_t);
+
+    std::size_t i = 0;
+    for (; i < width * height; i += vector_size) {
+        const auto v_src = vld1q_u8(src_ptr);
+        vst1q_u8(dst_ptr, vcgeq_u8(v_src, vdupq_n_u8(thresh)));
+
+        src_ptr += vector_size;
+        dst_ptr += vector_size;
+    }
+
+    for (; i < width * height; i++) {
         dst[i] = src[i] < thresh ? min_value : max_value;
     }
 }
 
-}  // namespace cpp
+}  // namespace neon

@@ -8,7 +8,7 @@
 #include "common.hpp"
 #include "threshold_otsu_cpp.hpp"
 #include "threshold_otsu_cuda.hpp"
-// #include "threshold_otsu_neon.hpp"
+#include "threshold_otsu_neon.hpp"
 
 
 int main(int argc, char** argv) {
@@ -38,14 +38,14 @@ int main(int argc, char** argv) {
         std::cout << "\tcpp : " << duration << " [usec]" << std::endl;
     }
 
-    // {
-    //     const auto dst = dst_neon.data();
-    //     const auto duration =
-    //         measure(iteration, neon::threshold_otsu, src, dst, width, height);
-    //     std::cout << "\tneon: " << duration << " [usec]" << std::endl;
+    {
+        const auto dst = dst_neon.data();
+        const auto duration =
+            measure(iteration, neon::threshold_otsu, src, dst, width, height);
+        std::cout << "\tneon: " << duration << " [usec]" << std::endl;
 
-    //     compare_images(dst_cpp, dst_neon);
-    // }
+        compare_images(dst_cpp, dst_neon);
+    }
 
     {
         IMG_T* d_src;
