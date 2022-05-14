@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     Image<IMG_T, 3> dst_neon_separate(width, height);
     Image<IMG_T, 3> dst_cuda(width, height);
 
-    constexpr auto ksize = 51;
+    constexpr auto ksize = 15;
     static_assert(ksize % 2 == 1);
 
     std::cout << "durations:" << std::endl;
