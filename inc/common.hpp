@@ -156,7 +156,7 @@ auto measure(const std::uint32_t N, Fn& fn, const Args&... args) {
         }
     }
 
-    return static_cast<double>(accumulator) / N;
+    return accumulator / N;
 }
 
 
