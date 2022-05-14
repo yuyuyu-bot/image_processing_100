@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
@@ -10,9 +11,10 @@ void threshold(const std::uint8_t* const src, std::uint8_t* const dst,
     constexpr auto min_value = std::numeric_limits<std::uint8_t>::min();
     constexpr auto max_value = std::numeric_limits<std::uint8_t>::max();
 
-    for (std::size_t i = 0; i < width * height; i++) {
-        dst[i] = src[i] < thresh ? min_value : max_value;
-    }
+    std::transform(src, src + width * height, dst,
+        [&thresh, &min_value, &max_value](const auto& val) {
+            return val < thresh ? min_value : max_value;
+        });
 }
 
 }  // namespace cpp
