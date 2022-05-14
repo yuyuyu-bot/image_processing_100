@@ -15,7 +15,8 @@ void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
     auto src_ptr = src;
     auto dst_ptr = dst;
 
-    for (std::size_t i = 0; i < width * height * 3; i += vector_size) {
+    std::size_t i = 0;
+    for (; i + vector_size < width * height * 3; i += vector_size) {
         const auto&& v_RGB = vld3q_u8(src_ptr);
         const uint8x16_t& v_R = v_RGB.val[0];
         const uint8x16_t& v_G = v_RGB.val[1];
@@ -95,6 +96,33 @@ void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
 
         src_ptr += vector_size;
         dst_ptr += vector_size;
+    }
+
+    for (; i < width * height * 3; i += 3) {
+        const auto R = src[i + 0];
+        const auto G = src[i + 1];
+        const auto B = src[i + 2];
+
+        const auto vmax = std::max({R, G, B});
+        const auto vmin = std::min({R, G, B});
+
+        int H;
+        if (vmin == vmax) {
+            H = 0;
+        } else if (vmin == B) {
+            H = 60 * (G - R) / (vmax - vmin) + 60;
+        } else if (vmin == R) {
+            H = 60 * (B - G) / (vmax - vmin) + 180;
+        } else {
+            H = 60 * (R - B) / (vmax - vmin) + 300;
+        }
+
+        const auto S = vmax - vmin;
+        const auto V = vmax;
+
+        dst[i + 0] = static_cast<std::uint8_t>(H / 360.f * 255.f);
+        dst[i + 1] = S;
+        dst[i + 2] = V;
     }
 }
 

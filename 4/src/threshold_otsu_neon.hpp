@@ -63,7 +63,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
     constexpr auto vector_size = sizeof(uint8x16_t) / sizeof(std::uint8_t);
 
     std::size_t i = 0;
-    for (; i < width * height; i += vector_size) {
+    for (; i + vector_size < width * height; i += vector_size) {
         const auto v_src = vld1q_u8(src_ptr);
         vst1q_u8(dst_ptr, vcgeq_u8(v_src, vdupq_n_u8(thresh)));
 

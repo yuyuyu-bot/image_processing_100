@@ -32,38 +32,36 @@ void rgb_to_gray(const std::uint8_t* const src, std::uint8_t* const dst,
         return vmovn_u16(v_u16);
     };
 
-    for (std::size_t y = 0; y < height; y++) {
-        std::size_t x = 0;
-        for (; x < width - vector_size; x += vector_size) {
-            const auto v_rgb = vld3_u8(src_ptr);
-            const auto [v_r_f32_l, v_r_f32_h] = u8_to_u32(v_rgb.val[0]);
-            const auto [v_g_f32_l, v_g_f32_h] = u8_to_u32(v_rgb.val[1]);
-            const auto [v_b_f32_l, v_b_f32_h] = u8_to_u32(v_rgb.val[2]);
+    std::size_t i = 0;
+    for (; i + vector_size < width * height; i += vector_size) {
+        const auto v_rgb = vld3_u8(src_ptr);
+        const auto [v_r_f32_l, v_r_f32_h] = u8_to_u32(v_rgb.val[0]);
+        const auto [v_g_f32_l, v_g_f32_h] = u8_to_u32(v_rgb.val[1]);
+        const auto [v_b_f32_l, v_b_f32_h] = u8_to_u32(v_rgb.val[2]);
 
-            const auto v_rc_u32_l = vmulq_n_u32(v_r_f32_l, r_coeff);
-            const auto v_rc_u32_h = vmulq_n_u32(v_r_f32_h, r_coeff);
-            const auto v_gc_u32_l = vmulq_n_u32(v_g_f32_l, g_coeff);
-            const auto v_gc_u32_h = vmulq_n_u32(v_g_f32_h, g_coeff);
-            const auto v_bc_u32_l = vmulq_n_u32(v_b_f32_l, b_coeff);
-            const auto v_bc_u32_h = vmulq_n_u32(v_b_f32_h, b_coeff);
+        const auto v_rc_u32_l = vmulq_n_u32(v_r_f32_l, r_coeff);
+        const auto v_rc_u32_h = vmulq_n_u32(v_r_f32_h, r_coeff);
+        const auto v_gc_u32_l = vmulq_n_u32(v_g_f32_l, g_coeff);
+        const auto v_gc_u32_h = vmulq_n_u32(v_g_f32_h, g_coeff);
+        const auto v_bc_u32_l = vmulq_n_u32(v_b_f32_l, b_coeff);
+        const auto v_bc_u32_h = vmulq_n_u32(v_b_f32_h, b_coeff);
 
-            const auto v_gray_u32_l = vaddq_u32(v_rc_u32_l, vaddq_u32(v_gc_u32_l, v_bc_u32_l));
-            const auto v_gray_u32_h = vaddq_u32(v_rc_u32_h, vaddq_u32(v_gc_u32_h, v_bc_u32_h));
+        const auto v_gray_u32_l = vaddq_u32(v_rc_u32_l, vaddq_u32(v_gc_u32_l, v_bc_u32_l));
+        const auto v_gray_u32_h = vaddq_u32(v_rc_u32_h, vaddq_u32(v_gc_u32_h, v_bc_u32_h));
 
-            const auto v_gray = u32_to_u8(vshrq_n_u32(v_gray_u32_l, normalize_shift_bits),
-                                          vshrq_n_u32(v_gray_u32_h, normalize_shift_bits));
-            vst1_u8(dst_ptr, v_gray);
+        const auto v_gray = u32_to_u8(vshrq_n_u32(v_gray_u32_l, normalize_shift_bits),
+                                      vshrq_n_u32(v_gray_u32_h, normalize_shift_bits));
+        vst1_u8(dst_ptr, v_gray);
 
-            src_ptr += 3 * vector_size;
-            dst_ptr += vector_size;
-        }
+        src_ptr += 3 * vector_size;
+        dst_ptr += vector_size;
+    }
 
-        for (; x < width; x++) {
-            *dst_ptr = (r_coeff * src_ptr[0] + g_coeff * src_ptr[1] + b_coeff * src_ptr[2])
-                        >> normalize_shift_bits;
-            src_ptr += 3;
-            dst_ptr++;
-        }
+    for (; i < width * height; i++) {
+        *dst_ptr = (r_coeff * src_ptr[0] + g_coeff * src_ptr[1] + b_coeff * src_ptr[2])
+                    >> normalize_shift_bits;
+        src_ptr += 3;
+        dst_ptr++;
     }
 }
 
