@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     {
         const auto dst = dst_cpp_naive.data();
         const auto duration
-            = measure(1, cpp::mean_filter_naive, src, dst, width, height, ksize);
+            = measure(iteration, cpp::mean_filter_naive, src, dst, width, height, ksize);
         std::cout << "\tcpp naive    : " << duration << " [usec]" << std::endl;
     }
 
