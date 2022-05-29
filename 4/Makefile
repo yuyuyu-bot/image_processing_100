@@ -4,6 +4,7 @@ CXXFLAGS  += -Wno-deprecated-declarations -Wno-unknown-pragmas
 
 NVCC      := nvcc
 NVCCFLAGS := -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
+NVCCFLAGS += --generate-code arch=compute_75,code=sm_75
 
 INCLUDES  := -I../inc -I/usr/local/cuda/include -I../3rdparty/neon2sse
 LDFLAGS   := -L/usr/local/cuda/lib64 -lcudart -lpng
