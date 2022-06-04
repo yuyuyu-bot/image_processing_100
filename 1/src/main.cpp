@@ -11,8 +11,8 @@
 
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cout << "usage: " << argv[0] << " image_path width height" << std::endl;
+    if (argc != 5) {
+        std::cout << "usage: " << argv[0] << " image_path width height dump_flag" << std::endl;
         return 0;
     }
 
@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 
     const auto width = std::stoul(argv[2]);
     const auto height = std::stoul(argv[3]);
+    const auto dump_flag = std::stoi(argv[4]) != 0;
     const Image<IMG_T, 3> src_img(argv[1], width, height);
     const auto src = src_img.data();
 
@@ -56,9 +57,11 @@ int main(int argc, char** argv) {
         compare_images(dst_cpp, dst_cuda);
     }
 
-    dst_cpp.write("cpp.png");
-    dst_neon.write("neon.png");
-    dst_cuda.write("cuda.png");
+    if (dump_flag) {
+        dst_cpp.write("cpp.png");
+        dst_neon.write("neon.png");
+        dst_cuda.write("cuda.png");
+    }
 
     return 0;
 }

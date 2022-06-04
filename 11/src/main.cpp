@@ -11,8 +11,8 @@
 
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cout << "usage: " << argv[0] << " image_path width height threshold" << std::endl;
+    if (argc != 5) {
+        std::cout << "usage: " << argv[0] << " image_path width height dump_flag" << std::endl;
         return 0;
     }
 
@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 
     const auto width = std::stoul(argv[2]);
     const auto height = std::stoul(argv[3]);
+    const auto dump_flag = std::stoi(argv[4]) != 0;
     const Image<IMG_T, 3> src_img(argv[1], width, height);
     const auto src = src_img.data();
 
@@ -87,12 +88,14 @@ int main(int argc, char** argv) {
         compare_images(dst_cpp_integral, dst_cuda);
     }
 
-    dst_cpp_naive.write("cpp_naive.png");
-    dst_cpp_integral.write("cpp_integral.png");
-    dst_cpp_sliding.write("cpp_sliding.png");
-    dst_cpp_separate.write("cpp_separate.png");
-    dst_neon_separate.write("neon_separate.png");
-    dst_cuda.write("cuda.png");
+    if (dump_flag) {
+        dst_cpp_naive.write("cpp_naive.png");
+        dst_cpp_integral.write("cpp_integral.png");
+        dst_cpp_sliding.write("cpp_sliding.png");
+        dst_cpp_separate.write("cpp_separate.png");
+        dst_neon_separate.write("neon_separate.png");
+        dst_cuda.write("cuda.png");
+    }
 
     return 0;
 }
