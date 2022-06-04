@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include "device_buffer.hpp"
 #include "average_pooling_cpp.hpp"
+#include "average_pooling_cuda.hpp"
 #include "average_pooling_neon.hpp"
 
 
@@ -48,17 +49,17 @@ int main(int argc, char** argv) {
         compare_images(dst_cpp, dst_neon);
     }
 
-    // {
-    //     device_buffer<IMG_T> d_src(width * height * 3, src);
-    //     device_buffer<IMG_T> d_dst(width * height * 3);
+    {
+        device_buffer<IMG_T> d_src(width * height * 3, src);
+        device_buffer<IMG_T> d_dst(width * height * 3);
 
-    //     const auto duration =
-    //         measure(iteration, cuda::mean_filter, d_src.get(), d_dst.get(), width, height, ksize);
-    //     std::cout << "\tcuda         : " << duration << " [usec]" << std::endl;
+        const auto duration = measure(iteration, cuda::average_pooling, d_src.get(), d_dst.get(),
+                                      width, height, ksize);
+        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
 
-    //     d_dst.download(dst_cuda.data());
-    //     compare_images(dst_cpp_integral, dst_cuda);
-    // }
+        d_dst.download(dst_cuda.data());
+        compare_images(dst_cpp, dst_cuda);
+    }
 
     if (dump_flag) {
         dst_cpp.write("cpp.png");
