@@ -38,11 +38,16 @@ __global__ void max_pooling_kernel(const std::uint8_t* const src, std::uint8_t* 
     __syncthreads();
 
     for (std::uint32_t delta = 1; delta < ksize; delta <<= 1) {
+        std::uint8_t rtmp = 0, gtmp = 0, btmp = 0;
         if (tid + delta < ksize) {
-            s_rmax[tid] = max(s_rmax[tid], s_rmax[tid + delta]);
-            s_gmax[tid] = max(s_gmax[tid], s_gmax[tid + delta]);
-            s_bmax[tid] = max(s_bmax[tid], s_bmax[tid + delta]);
+            rtmp = s_rmax[tid + delta];
+            gtmp = s_gmax[tid + delta];
+            btmp = s_bmax[tid + delta];
         }
+        __syncthreads();
+        s_rmax[tid] = max(s_rmax[tid], rtmp);
+        s_gmax[tid] = max(s_gmax[tid], gtmp);
+        s_bmax[tid] = max(s_bmax[tid], btmp);
         __syncthreads();
     }
 
