@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    constexpr auto iteration = 1;
+    constexpr auto iteration = 100;
 
     using IMG_T = std::uint8_t;
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     Image<IMG_T, 3> dst_neon(width, height);
     Image<IMG_T, 3> dst_cuda(width, height);
 
-    constexpr auto ksize = 7;
+    constexpr auto ksize = 5;
     constexpr auto sigma = 10.f;
     static_assert(ksize % 2 == 1);
 

@@ -42,11 +42,9 @@ __global__ void gaussian_filter_kernel(const std::uint8_t* const src, std::uint8
         if (x == width) {
             x = 0;
             y++;
-            if (y == height) {
-                x = -1;
-                y = -1;
-            }
+            return y < height;
         }
+        return true;
     };
 
     for (int i = 0; i < pixel_per_thread; i++) {
@@ -65,8 +63,7 @@ __global__ void gaussian_filter_kernel(const std::uint8_t* const src, std::uint8
         dst[stride * y + x * 3 + 0] = rsum / kernel_sum;
         dst[stride * y + x * 3 + 1] = gsum / kernel_sum;
         dst[stride * y + x * 3 + 2] = bsum / kernel_sum;
-        next(x, y);
-        if (x < 0) {
+        if (!next(x, y)) {
             break;
         }
     }
