@@ -42,7 +42,7 @@ $(BUILD_DIR)/%.d: $(SRC_DIR)/%.cpp
 -include $(DEPS)
 
 run:
-	@$(TARGET) ../images/rgb_image.png 500 500 1
+	@$(TARGET) ../images/fruits.png 500 500 1
 
 clean:
 	rm $(BUILD_DIR) -rf
