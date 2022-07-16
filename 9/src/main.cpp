@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    constexpr auto iteration = 100;
+    constexpr auto iteration = 10;
 
     using IMG_T = std::uint8_t;
 
