@@ -34,27 +34,20 @@ int main(int argc, char** argv) {
     constexpr auto sigma = 10.f;
     static_assert(ksize % 2 == 1);
 
-    std::cout << "durations:" << std::endl;
     {
         const auto dst = dst_cpp_naive.data();
-        const auto duration
-            = measure(iteration, cpp::gaussian_filter_naive, src, dst, width, height, ksize, sigma);
-        std::cout << "\tcpp naive    : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::gaussian_filter_naive, src, dst, width, height, ksize, sigma);
     }
 
     {
         const auto dst = dst_cpp_separate.data();
-        const auto duration = measure(iteration, cpp::gaussian_filter_separate, src, dst,
-                                      width, height, ksize, sigma);
-        std::cout << "\tcpp separate : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::gaussian_filter_separate, src, dst, width, height, ksize, sigma);
         compare_images(dst_cpp_naive, dst_cpp_separate);
     }
 
     // {
     //     const auto dst = dst_neon.data();
-    //     const auto duration
-    //         = measure(iteration, neon::max_pooling, src, dst, width, height, ksize);
-    //     std::cout << "\tneon: " << duration << " [usec]" << std::endl;
+    //     MEASURE(iteration, neon::max_pooling, src, dst, width, height, ksize);
     //     compare_images(dst_cpp_naive, dst_neon);
     // }
 
@@ -62,9 +55,8 @@ int main(int argc, char** argv) {
         device_buffer<IMG_T> d_src(width * height * 3, src);
         device_buffer<IMG_T> d_dst(width * height * 3);
 
-        const auto duration = measure(iteration, cuda::gaussian_filter, d_src.get(), d_dst.get(),
-                                      width, height, ksize, sigma);
-        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cuda::gaussian_filter, d_src.get(), d_dst.get(), width, height, ksize,
+                sigma);
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp_naive, dst_cuda);

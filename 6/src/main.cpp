@@ -32,16 +32,12 @@ int main(int argc, char** argv) {
 
     {
         const auto dst = dst_cpp.data();
-        const auto duration = measure(iteration, cpp::color_reduction, src, dst, width, height);
-        std::cout << "durations:" << std::endl;
-        std::cout << "\tcpp : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::color_reduction, src, dst, width, height);
     }
 
     {
         const auto dst = dst_neon.data();
-        const auto duration = measure(iteration, neon::color_reduction, src, dst, width, height);
-        std::cout << "\tneon: " << duration << " [usec]" << std::endl;
-
+        MEASURE(iteration, neon::color_reduction, src, dst, width, height);
         compare_images(dst_cpp, dst_neon);
     }
 
@@ -49,9 +45,7 @@ int main(int argc, char** argv) {
         device_buffer<IMG_T> d_src(width * height * 3, src);
         device_buffer<IMG_T> d_dst(width * height * 3);
 
-        const auto duration =
-            measure(iteration, cuda::color_reduction, d_src.get(), d_dst.get(), width, height);
-        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cuda::color_reduction, d_src.get(), d_dst.get(), width, height);
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);

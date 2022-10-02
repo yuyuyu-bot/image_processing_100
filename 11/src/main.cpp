@@ -36,43 +36,32 @@ int main(int argc, char** argv) {
     constexpr auto ksize = 15;
     static_assert(ksize % 2 == 1);
 
-    std::cout << "durations:" << std::endl;
     {
         const auto dst = dst_cpp_naive.data();
-        const auto duration
-            = measure(iteration, cpp::mean_filter_naive, src, dst, width, height, ksize);
-        std::cout << "\tcpp naive    : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::mean_filter_naive, src, dst, width, height, ksize);
     }
 
     {
         const auto dst = dst_cpp_integral.data();
-        const auto duration
-            = measure(iteration, cpp::mean_filter_integral, src, dst, width, height, ksize);
-        std::cout << "\tcpp integral : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::mean_filter_integral, src, dst, width, height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_integral);
     }
 
     {
         const auto dst = dst_cpp_sliding.data();
-        const auto duration
-            = measure(iteration, cpp::mean_filter_sliding, src, dst, width, height, ksize);
-        std::cout << "\tcpp sliding  : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::mean_filter_sliding, src, dst, width, height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_sliding);
     }
 
     {
         const auto dst = dst_cpp_separate.data();
-        const auto duration
-            = measure(iteration, cpp::mean_filter_separate, src, dst, width, height, ksize);
-        std::cout << "\tcpp separate : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::mean_filter_separate, src, dst, width, height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_separate);
     }
 
     {
         const auto dst = dst_neon_separate.data();
-        const auto duration
-            = measure(iteration, neon::mean_filter_separate, src, dst, width, height, ksize);
-        std::cout << "\tneon separate: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, neon::mean_filter_separate, src, dst, width, height, ksize);
         compare_images(dst_cpp_naive, dst_neon_separate);
     }
 
@@ -80,9 +69,7 @@ int main(int argc, char** argv) {
         device_buffer<IMG_T> d_src(width * height * 3, src);
         device_buffer<IMG_T> d_dst(width * height * 3);
 
-        const auto duration =
-            measure(iteration, cuda::mean_filter, d_src.get(), d_dst.get(), width, height, ksize);
-        std::cout << "\tcuda         : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cuda::mean_filter, d_src.get(), d_dst.get(), width, height, ksize);
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp_integral, dst_cuda);

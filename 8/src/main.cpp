@@ -33,19 +33,14 @@ int main(int argc, char** argv) {
     constexpr auto ksize = 101;
     static_assert(ksize % 2 == 1);
 
-    std::cout << "durations:" << std::endl;
     {
         const auto dst = dst_cpp.data();
-        const auto duration
-            = measure(iteration, cpp::max_pooling, src, dst, width, height, ksize);
-        std::cout << "\tcpp : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::max_pooling, src, dst, width, height, ksize);
     }
 
     {
         const auto dst = dst_neon.data();
-        const auto duration
-            = measure(iteration, neon::max_pooling, src, dst, width, height, ksize);
-        std::cout << "\tneon: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, neon::max_pooling, src, dst, width, height, ksize);
         compare_images(dst_cpp, dst_neon);
     }
 
@@ -53,9 +48,7 @@ int main(int argc, char** argv) {
         device_buffer<IMG_T> d_src(width * height * 3, src);
         device_buffer<IMG_T> d_dst(width * height * 3);
 
-        const auto duration =
-            measure(iteration, cuda::max_pooling, d_src.get(), d_dst.get(), width, height, ksize);
-        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cuda::max_pooling, d_src.get(), d_dst.get(), width, height, ksize);
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);

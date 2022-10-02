@@ -9,6 +9,8 @@
 #include <string>
 #include <type_traits>
 
+#define FUNC_NAME__(func) #func
+#define MEASURE(itr, func, ...) measure(itr, func, FUNC_NAME__(func), __VA_ARGS__);
 
 namespace {
 
@@ -142,7 +144,7 @@ void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
 
 
 template <class Fn, class... Args>
-auto measure(const std::uint32_t N, Fn& fn, const Args&... args) {
+auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args&... args) {
     auto accumulator = 0ll;
 
     for (std::uint32_t i = 0; i <= N; i++) {
@@ -156,9 +158,11 @@ auto measure(const std::uint32_t N, Fn& fn, const Args&... args) {
         }
     }
 
+    const auto duration = accumulator / N;
+    std::printf("\t%-30s: %lld [usec]\n", fn_str, duration);
+
     return accumulator / N;
 }
-
 
 }  // anonymous namespace
 

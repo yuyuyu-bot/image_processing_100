@@ -32,18 +32,12 @@ int main(int argc, char** argv) {
 
     {
         const auto dst = dst_cpp.data();
-        const auto duration =
-            measure(iteration, cpp::threshold_otsu, src, dst, width, height);
-        std::cout << "durations:" << std::endl;
-        std::cout << "\tcpp : " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cpp::threshold_otsu, src, dst, width, height);
     }
 
     {
         const auto dst = dst_neon.data();
-        const auto duration =
-            measure(iteration, neon::threshold_otsu, src, dst, width, height);
-        std::cout << "\tneon: " << duration << " [usec]" << std::endl;
-
+        MEASURE(iteration, neon::threshold_otsu, src, dst, width, height);
         compare_images(dst_cpp, dst_neon);
     }
 
@@ -52,9 +46,8 @@ int main(int argc, char** argv) {
         device_buffer<IMG_T> d_dst(width * height);
         device_buffer<int> d_histogram_buffer(256);
 
-        const auto duration = measure(iteration, cuda::threshold_otsu, d_src.get(), d_dst.get(),
-                                      width, height, d_histogram_buffer.get());
-        std::cout << "\tcuda: " << duration << " [usec]" << std::endl;
+        MEASURE(iteration, cuda::threshold_otsu, d_src.get(), d_dst.get(), width, height,
+                d_histogram_buffer.get());
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);
