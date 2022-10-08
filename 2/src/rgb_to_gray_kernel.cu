@@ -1,6 +1,5 @@
 #include <cuda_runtime.h>
 
-#include "common.hpp"
 #include "cuda_safe_call.hpp"
 #include "rgb_to_gray_cuda.hpp"
 
@@ -28,8 +27,8 @@ namespace cuda {
 
 void rgb_to_gray(const std::uint8_t* src, std::uint8_t* dst,
                  const std::size_t width, const std::size_t height) {
-    constexpr auto grid_dim = dim3{image_height};
-    constexpr auto block_dim = dim3{image_width};
+    const auto grid_dim = dim3{height};
+    const auto block_dim = dim3{width};
 
     rgb_to_gray_kernel<<<grid_dim, block_dim>>>(src, dst, width, height);
     CUDASafeCall();

@@ -2,7 +2,6 @@
 #include <cuda_runtime.h>
 #include <numeric>
 
-#include "common.hpp"
 #include "cuda_safe_call.hpp"
 #include "rgb_to_hsv_cuda.hpp"
 
@@ -46,8 +45,8 @@ namespace cuda {
 
 void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
                 const std::size_t width, const std::size_t height) {
-    constexpr auto block_dim = dim3{image_height};
-    constexpr auto thread_dim = dim3{image_width};
+    const auto block_dim = dim3{height};
+    const auto thread_dim = dim3{width};
 
     rgb_to_hsv_kernel<<<block_dim, thread_dim>>>(src, dst, width, height);
     CUDASafeCall();

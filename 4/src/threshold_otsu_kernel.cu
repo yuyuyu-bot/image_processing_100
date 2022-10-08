@@ -2,7 +2,6 @@
 #include <cuda_runtime.h>
 #include <numeric>
 
-#include "common.hpp"
 #include "cuda_safe_call.hpp"
 #include "threshold_otsu_cuda.hpp"
 
@@ -167,11 +166,11 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
                     const std::size_t width, const std::size_t height,
                     int* const histogram_buffer) {
     {
-        constexpr auto block_dim = dim3{image_height / 64};
-        constexpr auto thread_dim = dim3{64};
+        const auto block_dim = dim3{height / 64};
+        const auto thread_dim = dim3{64};
         cudaMemset((void*)histogram_buffer, 0, 256 * sizeof(int));
 
-        construct_histrogram_kernel<<<block_dim, thread_dim>>>(src, width, height, histogram_buffer, image_width);
+        construct_histrogram_kernel<<<block_dim, thread_dim>>>(src, width, height, histogram_buffer, width);
     }
 
     {
