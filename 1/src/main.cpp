@@ -11,41 +11,36 @@
 
 
 int main(int argc, char** argv) {
-    if (argc != 5) {
-        std::cout << "usage: " << argv[0] << " image_path width height dump_flag" << std::endl;
+    if (argc != 3) {
+        std::cout << "usage: " << argv[0] << " num_itr dump_flag" << std::endl;
         return 0;
     }
+    const auto num_itr = std::stoi(argv[1]);
+    const auto dump_flag = std::stoi(argv[2]) != 0;
 
-    constexpr auto iteration = 10;
-
-    using IMG_T = std::uint8_t;
-
-    const auto width = std::stoul(argv[2]);
-    const auto height = std::stoul(argv[3]);
-    const auto dump_flag = std::stoi(argv[4]) != 0;
-    const Image<IMG_T, 3> src_img(argv[1], width, height);
+    const Image<IMG_T, 3> src_img(image_color_path, image_width, image_height);
     const auto src = src_img.data();
 
-    Image<IMG_T, 3> dst_cpp(width, height);
-    Image<IMG_T, 3> dst_neon(width, height);
-    Image<IMG_T, 3> dst_cuda(width, height);
+    Image<IMG_T, 3> dst_cpp(image_width, image_height);
+    Image<IMG_T, 3> dst_neon(image_width, image_height);
+    Image<IMG_T, 3> dst_cuda(image_width, image_height);
 
     {
         const auto dst = dst_cpp.data();
-        MEASURE(iteration, cpp::rgb_to_bgr, src, dst, width, height);
+        MEASURE(num_itr, cpp::rgb_to_bgr, src, dst, image_width, image_height);
     }
 
     {
         const auto dst = dst_neon.data();
-        MEASURE(iteration, neon::rgb_to_bgr, src, dst, width, height);
+        MEASURE(num_itr, neon::rgb_to_bgr, src, dst, image_width, image_height);
         compare_images(dst_cpp, dst_neon);
     }
 
     {
-        device_buffer<IMG_T> d_src(width * height * 3, src);
-        device_buffer<IMG_T> d_dst(width * height * 3);
+        device_buffer<IMG_T> d_src(image_width * image_height * 3, src);
+        device_buffer<IMG_T> d_dst(image_width * image_height * 3);
 
-        MEASURE(iteration, cuda::rgb_to_bgr, d_src.get(), d_dst.get(), width, height);
+        MEASURE(num_itr, cuda::rgb_to_bgr, d_src.get(), d_dst.get(), image_width, image_height);
 
         d_dst.download(dst_cuda.data());
         compare_images(dst_cpp, dst_cuda);
