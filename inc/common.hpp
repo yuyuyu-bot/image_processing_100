@@ -14,6 +14,13 @@
 
 namespace {
 
+using IMG_T = std::uint8_t;
+
+constexpr auto image_color_path = "../images/peach.png";
+constexpr auto image_gray_path = "../images/peach_gray.png";
+constexpr auto image_width = 512;
+constexpr auto image_height = 512;
+
 template <typename IMG_T, int CH = 3>
 class Image {
 public:
@@ -148,18 +155,17 @@ auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args
     auto accumulator = 0ll;
 
     for (std::uint32_t i = 0; i <= N; i++) {
-        const auto begin = std::chrono::system_clock::now();
+        const auto begin = std::chrono::high_resolution_clock::now();
         fn(args...);
-        const auto end = std::chrono::system_clock::now();
+        const auto end = std::chrono::high_resolution_clock::now();
 
         if (i > 0) {
-            accumulator +=
-                std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+            accumulator += std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
         }
     }
 
     const auto duration = accumulator / N;
-    std::printf("\t%-30s: %lld [usec]\n", fn_str, duration);
+    std::printf("\t%-30s: %10.3f [usec]\n", fn_str, duration * 1e-3);
 
     return accumulator / N;
 }
