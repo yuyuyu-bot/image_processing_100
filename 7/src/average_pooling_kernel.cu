@@ -69,7 +69,7 @@ __global__ void average_pooling_kernel(const std::uint8_t* const src, std::uint8
 namespace cuda {
 
 void average_pooling(const std::uint8_t* const src, std::uint8_t* const dst,
-                 const std::size_t width, const std::size_t height, const std::size_t ksize) {
+                     const std::size_t width, const std::size_t height, const std::size_t ksize) {
     const auto block_dim = dim3{
         static_cast<std::uint32_t>((width + ksize - 1) / ksize),
         static_cast<std::uint32_t>((height + ksize - 1) / ksize)
