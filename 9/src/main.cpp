@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
     Image<IMG_T, 3> dst_cpp_separate(image_width, image_height);
     Image<IMG_T, 3> dst_neon(image_width, image_height);
     Image<IMG_T, 3> dst_cuda(image_width, image_height);
+    Image<IMG_T, 3> dst_cuda_shared(image_width, image_height);
 
     constexpr auto ksize = 5;
     constexpr auto sigma = 10.f;
@@ -58,11 +59,22 @@ int main(int argc, char** argv) {
         compare_images(dst_cpp_naive, dst_cuda);
     }
 
+    {
+        device_buffer<IMG_T> d_src(image_width * image_height * 3, src);
+        device_buffer<IMG_T> d_dst(image_width * image_height * 3);
+
+        MEASURE(num_itr, cuda::gaussian_filter_shared, d_src.get(), d_dst.get(), image_width, image_height, ksize, sigma);
+
+        d_dst.download(dst_cuda_shared.data());
+        compare_images(dst_cpp_naive, dst_cuda_shared);
+    }
+
     if (dump_flag) {
         dst_cpp_naive.write("cpp_naive.png");
         dst_cpp_separate.write("cpp_separate.png");
         dst_neon.write("neon.png");
         dst_cuda.write("cuda.png");
+        dst_cuda_shared.write("cuda_shared.png");
     }
 
     return 0;

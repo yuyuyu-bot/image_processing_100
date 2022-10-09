@@ -141,7 +141,9 @@ void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
         const auto diff = std::abs(expected - actual);
         max_diff = std::max(max_diff, diff);
         if (details && diff > 0) {
-            std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
+            std::printf("expected: %d, actual: %d at (%d, %d)\n",
+                        static_cast<int>(expected), static_cast<int>(actual),
+                        static_cast<int>(i % img1.width()), static_cast<int>(i / img1.width()));
         }
     }
     if (max_diff > 0) {
