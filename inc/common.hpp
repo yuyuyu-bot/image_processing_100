@@ -16,8 +16,8 @@ namespace {
 
 using IMG_T = std::uint8_t;
 
-constexpr auto image_color_path = "../images/peach.png";
-constexpr auto image_gray_path = "../images/peach_gray.png";
+constexpr auto image_color_path = "images/peach.png";
+constexpr auto image_gray_path = "images/peach_gray.png";
 constexpr auto image_width = 512;
 constexpr auto image_height = 512;
 

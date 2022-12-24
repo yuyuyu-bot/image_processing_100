@@ -22,8 +22,8 @@ namespace cuda {
 
 void rgb_to_bgr(const std::uint8_t* const src, std::uint8_t* const dst,
                 const std::size_t width, const std::size_t height) {
-    const auto grid_dim = dim3{height};
-    const auto block_dim = dim3{width};
+    const auto grid_dim = dim3{static_cast<std::uint32_t>(height)};
+    const auto block_dim = dim3{static_cast<std::uint32_t>(width)};
 
     rgb_to_bgr_kernel<<<grid_dim, block_dim>>>(src, dst, width, height);
     CUDASafeCall();

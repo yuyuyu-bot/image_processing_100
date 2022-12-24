@@ -1,9 +1,9 @@
 CXX        = g++
-CXXFLAGS  := -Wall -Wextra -O3 -std=c++17 -mssse3 -fno-tree-vectorize
+CXXFLAGS  := -g3 -Wall -Wextra -Werror -O3 -std=c++17 -mssse3 -fno-tree-vectorize
 CXXFLAGS  += -Wno-deprecated-declarations -Wno-unknown-pragmas
 
 NVCC      := nvcc
-NVCCFLAGS := -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
+NVCCFLAGS := -g -arch=sm_61 -O3 -x=cu -std=c++17 --compiler-bindir=$(CXX) -fmad=false
 NVCCFLAGS += --generate-code arch=compute_75,code=sm_75
 
 INCLUDES  := -I../inc -I/usr/local/cuda/include -I../3rdparty/neon2sse
