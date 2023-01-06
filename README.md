@@ -37,12 +37,7 @@ git clone https://github.com/brendangregg/FlameGraph
 
 run
 ```
-echo 1 | sudo tee /proc/sys/kernel/sched_schedstats
 perf record -- <command>
 perf report | head -n 20
 perf script | ~/git/FlameGraph/stackcollapse-perf.pl > out.perf-folded
-echo 0 | sudo tee /proc/sys/kernel/sched_schedstats
-
-export PERF_EXEC_PATH=/usr/local/bin/
-
 ```

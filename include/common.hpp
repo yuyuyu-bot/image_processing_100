@@ -4,6 +4,9 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <functional>
+#include <map>
 #include <memory>
 #include <png++/png.hpp>
 #include <string>
@@ -129,6 +132,29 @@ private:
     std::size_t width_, height_, stride_;
 };
 
+struct RunFlags {
+    bool run_cpp = true;
+    bool run_simd = false;
+    bool run_cuda = false;
+};
+
+auto parse_flags(const int argc, const char** argv) {
+    RunFlags flags;
+
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--cpp") {
+            flags.run_cpp = true;
+        }
+        else if (std::string(argv[i]) == "--simd") {
+            flags.run_simd = true;
+        }
+        else if (std::string(argv[i]) == "--cuda") {
+            flags.run_cuda = true;
+        }
+    }
+
+    return flags;
+}
 
 template <typename IMG_T, int CH>
 void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
@@ -151,7 +177,6 @@ void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
     }
 }
 
-
 template <class Fn, class... Args>
 auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args&... args) {
     auto accumulator = 0ll;
@@ -161,7 +186,7 @@ auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args
         fn(args...);
         const auto end = std::chrono::high_resolution_clock::now();
 
-        if (i > 0) {
+        if (N == 1 || i > 0) {
             accumulator += std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
         }
     }
@@ -171,6 +196,8 @@ auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args
 
     return accumulator / N;
 }
+
+
 
 }  // anonymous namespace
 
