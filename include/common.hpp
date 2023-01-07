@@ -166,7 +166,7 @@ inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType
         }
     }
     if (max_diff > 0) {
-        std::cout << "max diff: " << max_diff << std::endl;
+        std::cout << "\tImages did not match. max diff: " << max_diff << std::endl;
     }
 }
 
