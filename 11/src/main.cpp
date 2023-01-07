@@ -10,13 +10,13 @@
 #include "mean_filter_neon.hpp"
 
 
-int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::cout << "usage: " << argv[0] << " num_itr dump_flag" << std::endl;
+int main(const int argc, const char** argv) {
+    if (argc < 3) {
+        std::cout << "usage: " << argv[0] << " num_itr [--simd] [--cuda] [--dump]" << std::endl;
         return 0;
     }
     const auto num_itr = std::stoi(argv[1]);
-    const auto dump_flag = std::stoi(argv[2]) != 0;
+    const auto flags = parse_flags(argc, argv);
 
     const Image<IMG_T, 3> src_img(image_color_path);
     const auto src = src_img.data();
@@ -31,36 +31,36 @@ int main(int argc, char** argv) {
     constexpr auto ksize = 15;
     static_assert(ksize % 2 == 1);
 
-    {
+    if (flags.run_cpp) {
         const auto dst = dst_cpp_naive.data();
         MEASURE(num_itr, cpp::mean_filter_naive, src, dst, image_width, image_height, ksize);
     }
 
-    {
+    if (flags.run_cpp) {
         const auto dst = dst_cpp_integral.data();
         MEASURE(num_itr, cpp::mean_filter_integral, src, dst, image_width, image_height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_integral);
     }
 
-    {
+    if (flags.run_cpp) {
         const auto dst = dst_cpp_sliding.data();
         MEASURE(num_itr, cpp::mean_filter_sliding, src, dst, image_width, image_height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_sliding);
     }
 
-    {
+    if (flags.run_cpp) {
         const auto dst = dst_cpp_separate.data();
         MEASURE(num_itr, cpp::mean_filter_separate, src, dst, image_width, image_height, ksize);
         compare_images(dst_cpp_naive, dst_cpp_separate);
     }
 
-    {
+    if (flags.run_simd) {
         const auto dst = dst_neon_separate.data();
         MEASURE(num_itr, neon::mean_filter_separate, src, dst, image_width, image_height, ksize);
         compare_images(dst_cpp_naive, dst_neon_separate);
     }
 
-    {
+    if (flags.run_cuda) {
         device_buffer<IMG_T> d_src(image_width * image_height * 3, src);
         device_buffer<IMG_T> d_dst(image_width * image_height * 3);
 
@@ -70,13 +70,13 @@ int main(int argc, char** argv) {
         compare_images(dst_cpp_integral, dst_cuda);
     }
 
-    if (dump_flag) {
-        dst_cpp_naive.write("cpp_naive.png");
-        dst_cpp_integral.write("cpp_integral.png");
-        dst_cpp_sliding.write("cpp_sliding.png");
-        dst_cpp_separate.write("cpp_separate.png");
-        dst_neon_separate.write("neon_separate.png");
-        dst_cuda.write("cuda.png");
+    if (flags.dump_imgs) {
+        if (flags.run_cpp) { dst_cpp_naive.write("cpp_naive.png"); }
+        if (flags.run_cpp) { dst_cpp_integral.write("cpp_integral.png"); }
+        if (flags.run_cpp) { dst_cpp_sliding.write("cpp_sliding.png"); }
+        if (flags.run_cpp) { dst_cpp_separate.write("cpp_separate.png"); }
+        if (flags.run_simd) { dst_neon_separate.write("neon_separate.png"); }
+        if (flags.run_cuda) { dst_cuda.write("cuda.png"); }
     }
 
     return 0;
