@@ -17,8 +17,7 @@ void gaussian_filter_naive(const std::uint8_t* const src, std::uint8_t* const ds
     auto kernel_sum = 0.f;
     for (int ky = -khalf; ky <= khalf; ky++) {
         for (int kx = -khalf; kx <= khalf; kx++) {
-            kernel[(ky + khalf) * ksize + (kx + khalf)] =
-                std::exp(-(kx * kx + ky * ky) / (2 * sigma * sigma));
+            kernel[(ky + khalf) * ksize + (kx + khalf)] = std::exp(-(kx * kx + ky * ky) / (2 * sigma * sigma));
             kernel_sum += std::exp(-(kx * kx + ky * ky) / (2 * sigma * sigma));
         }
     }
@@ -29,10 +28,8 @@ void gaussian_filter_naive(const std::uint8_t* const src, std::uint8_t* const ds
             int kidx = 0;
             for (int ky = -khalf; ky <= khalf; ky++) {
                 for (int kx = -khalf; kx <= khalf; kx++) {
-                    const auto sx =
-                        std::clamp(static_cast<int>(x) + kx, 0, static_cast<int>(width) - 1);
-                    const auto sy =
-                        std::clamp(static_cast<int>(y) + ky, 0, static_cast<int>(height) - 1);
+                    const auto sx = std::clamp(static_cast<int>(x) + kx, 0, static_cast<int>(width) - 1);
+                    const auto sy = std::clamp(static_cast<int>(y) + ky, 0, static_cast<int>(height) - 1);
                     rsum += kernel[kidx] * src[stride * sy + sx * 3 + 0];
                     gsum += kernel[kidx] * src[stride * sy + sx * 3 + 1];
                     bsum += kernel[kidx] * src[stride * sy + sx * 3 + 2];
@@ -71,8 +68,7 @@ void gaussian_filter_separate(const std::uint8_t* const src, std::uint8_t* const
             auto rsum = 0.f, bsum = 0.f, gsum = 0.f;
             int kidx = 0;
             for (int k = -khalf; k <= khalf; k++) {
-                const auto sy =
-                    std::clamp(static_cast<int>(y) + k, 0, static_cast<int>(height) - 1);
+                const auto sy = std::clamp(static_cast<int>(y) + k, 0, static_cast<int>(height) - 1);
                 rsum += kernel[kidx] * src[stride * sy + x * 3 + 0];
                 gsum += kernel[kidx] * src[stride * sy + x * 3 + 1];
                 bsum += kernel[kidx] * src[stride * sy + x * 3 + 2];
@@ -89,8 +85,7 @@ void gaussian_filter_separate(const std::uint8_t* const src, std::uint8_t* const
             auto rsum = 0.f, bsum = 0.f, gsum = 0.f;
             int kidx = 0;
             for (int k = -khalf; k <= khalf; k++) {
-                const auto sx =
-                    std::clamp(static_cast<int>(x) + k, 0, static_cast<int>(width) - 1);
+                const auto sx = std::clamp(static_cast<int>(x) + k, 0, static_cast<int>(width) - 1);
                 rsum += kernel[kidx] * vertical_sum[stride * y + sx * 3 + 0];
                 gsum += kernel[kidx] * vertical_sum[stride * y + sx * 3 + 1];
                 bsum += kernel[kidx] * vertical_sum[stride * y + sx * 3 + 2];

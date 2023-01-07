@@ -7,6 +7,7 @@
 #include "device_buffer.hpp"
 #include "gaussian_filter_cpp.hpp"
 #include "gaussian_filter_cuda.hpp"
+#include "gaussian_filter_neon.hpp"
 
 
 int main(const int argc, const char** argv) {
@@ -41,11 +42,11 @@ int main(const int argc, const char** argv) {
         compare_images(dst_cpp_naive, dst_cpp_separate);
     }
 
-    // if (flags.run_simd) {
-    //     const auto dst = dst_neon.data();
-    //     MEASURE(num_itr, neon::max_pooling, src, dst, image_width, image_height, ksize);
-    //     compare_images(dst_cpp_naive, dst_neon);
-    // }
+    if (flags.run_simd) {
+        const auto dst = dst_neon.data();
+        MEASURE(num_itr, neon::gaussian_filter_separate, src, dst, image_width, image_height, ksize, sigma);
+        compare_images(dst_cpp_naive, dst_neon);
+    }
 
     if (flags.run_cuda) {
         device_buffer<IMG_T> d_src(image_width * image_height * 3, src);

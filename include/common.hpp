@@ -35,22 +35,57 @@ public:
 
     Image(const std::string& filename) {
         static_assert(std::is_same_v<ElemType, std::uint8_t>);
+        static_assert(CH == 1 || CH == 3);
 
-        const cv::Mat image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+        const cv::Mat image = cv::imread(filename, (CH == 1 ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR));
+        assert(image.depth() == CV_8U);
         assert(image.channels() == CH);
 
-        width_ = image.cols;
+        width_  = image.cols;
         height_ = image.rows;
         stride_ = width_ * CH;
-        data_ = std::make_unique<ElemType[]>(stride_ * height_);
-        std::copy_n(image.begin<ElemType>(), stride_ * height_, data_.get());
+        data_   = std::make_unique<ElemType[]>(stride_ * height_);
+
+        for (std::size_t y = 0; y < height_; y++) {
+            auto row_ptr = this->get_row(y);
+            for (std::size_t x = 0; x < width_; x++) {
+                auto col_ptr = row_ptr + x * CH;
+                if constexpr (CH == 1) {
+                    *col_ptr = *image.ptr<ElemType>(y, x);
+                }
+                else if constexpr (CH == 3) {
+                    *(col_ptr + 0) = image.at<cv::Vec3b>(y, x)[2];
+                    *(col_ptr + 1) = image.at<cv::Vec3b>(y, x)[1];
+                    *(col_ptr + 2) = image.at<cv::Vec3b>(y, x)[0];
+                }
+                else {
+                    std::cerr << "Not implemented." << std::endl;
+                }
+            }
+        }
     }
 
-    void write(const std::string& filename) {
+    void write(const std::string& filename) const {
         static_assert(std::is_same_v<ElemType, std::uint8_t>);
 
         cv::Mat image(height_, width_, CV_8UC(CH));
-        std::copy_n(data_.get(), stride_ * height_, image.begin<ElemType>());
+        for (std::size_t y = 0; y < height_; y++) {
+            auto row_ptr = this->get_row(y);
+            for (std::size_t x = 0; x < width_; x++) {
+                auto col_ptr = row_ptr + x * CH;
+                if constexpr (CH == 1) {
+                    *image.ptr<ElemType>(y, x) = *col_ptr;
+                }
+                else if constexpr (CH == 3) {
+                    image.at<cv::Vec3b>(y, x)[0] = *(col_ptr + 2);
+                    image.at<cv::Vec3b>(y, x)[1] = *(col_ptr + 1);
+                    image.at<cv::Vec3b>(y, x)[2] = *(col_ptr + 0);
+                }
+                else {
+                    std::cerr << "Not implemented." << std::endl;
+                }
+            }
+        }
         cv::imwrite(filename, image);
     }
 
@@ -116,8 +151,7 @@ inline auto parse_flags(const int argc, const char** argv) {
 }
 
 template <typename ElemType, int CH>
-inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType, CH>& img2,
-                    bool details = false){
+inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType, CH>& img2, bool details = false){
     const auto size = img1.width() * img2.height() * CH;
     auto max_diff = 0;
     for (std::size_t i = 0; i < size; i++) {
