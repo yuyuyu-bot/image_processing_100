@@ -1,11 +1,15 @@
 # image_processing_100
 
-[画像処理100本ノック](https://github.com/minido/Gasyori100knock-1)を
+Implement [画像処理100本ノック](https://github.com/minido/Gasyori100knock-1) in
 - C++
 - NEON
 - CUDA
 
-でやる。
+## How to run
+```shell-session
+$ bash compile.bash
+$ bash run_target.bash --target all --simd --cuda
+```
 
 # Set up history
 ```shell-session

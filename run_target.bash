@@ -28,7 +28,6 @@ function print_usage () {
 }
 
 # parse args
-shift
 while (( $# > 0 )); do
     case $1 in
     --build | -b)
