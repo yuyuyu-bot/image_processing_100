@@ -12,6 +12,7 @@ BIN_LIST=(
     "7-average_pooling"
     "8-max_pooling"
     "9-gaussian_filter"
+    "10-median_filter"
     "11-mean_filter"
     "47-dilation"
 )
@@ -96,9 +97,9 @@ echo ""
 if [ ${TARGET} = "all" ]; then
     for BIN in ${BIN_LIST[@]}; do
         echo ${BIN}
-        ./${BUILD_DIR}/${BIN}/${BIN} ${NUM_ITERATIONS} --simd --cuda
+        ./${BUILD_DIR}/${BIN}/${BIN} ${NUM_ITERATIONS} ${OPTIONS}
     done
 else
     echo ${TARGET}
-    ./${BUILD_DIR}/${TARGET}/${TARGET} ${NUM_ITERATIONS} --simd --cuda
+    ./${BUILD_DIR}/${TARGET}/${TARGET} ${NUM_ITERATIONS} ${OPTIONS}
 fi
