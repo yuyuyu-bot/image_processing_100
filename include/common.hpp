@@ -4,13 +4,11 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <functional>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <png++/png.hpp>
+#include <opencv2/highgui.hpp>
 #include <string>
-#include <type_traits>
 
 #define FUNC_NAME__(func) #func
 #define MEASURE(itr, func, ...) measure(itr, func, FUNC_NAME__(func), __VA_ARGS__);
@@ -24,96 +22,52 @@ constexpr auto image_gray_path = "images/peach_gray.png";
 constexpr auto image_width = 512;
 constexpr auto image_height = 512;
 
-template <typename IMG_T, int CH = 3>
+template <typename ElemType, int CH = 3>
 class Image {
 public:
-
     Image(const Image&) = delete;
     Image(const Image&&) = delete;
     Image& operator=(const Image&) = delete;
     Image& operator=(const Image&&) = delete;
 
-    Image(const std::size_t width, const std::size_t height) :
-        data_(std::make_unique<IMG_T[]>(width * height * CH)),
-        width_(width), height_(height), stride_(width * CH) {}
+    Image(const std::size_t width, const std::size_t height)
+        : data_(std::make_unique<ElemType[]>(width * height * CH)), width_(width), height_(height), stride_(width * CH) {}
 
-    Image(const std::string& filename, const std::size_t width, const std::size_t height) :
-        data_(std::make_unique<IMG_T[]>(width * height * CH)),
-        width_(width), height_(height), stride_(width * CH) {
-        static_assert(std::is_same_v<IMG_T, std::uint8_t>);
-        static_assert(CH == 1 || CH == 3);
+    Image(const std::string& filename) {
+        static_assert(std::is_same_v<ElemType, std::uint8_t>);
 
-        if constexpr (CH == 1) {
-            png::image<png::gray_pixel> image(filename);
-            assert(width == image.get_width());
-            assert(height == image.get_height());
+        const cv::Mat image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+        assert(image.channels() == CH);
 
-            for (std::size_t y = 0; y < height_; y++) {
-                const auto src_row = image[y];
-                const auto dst_row = this->get_row(y);
-                for (std::size_t x = 0; x < width_; x++) {
-                    dst_row[x] = src_row[x];
-                }
-            }
-        } else {
-            png::image<png::rgb_pixel> image(filename);
-            assert(width == image.get_width());
-            assert(height == image.get_height());
-
-            for (std::size_t y = 0; y < height_; y++) {
-                const auto src_row = image[y];
-                const auto dst_row = this->get_row(y);
-                for (std::size_t x = 0; x < width_; x++) {
-                    dst_row[x * CH + 0] = src_row.at(x).red;
-                    dst_row[x * CH + 1] = src_row.at(x).green;
-                    dst_row[x * CH + 2] = src_row.at(x).blue;
-                }
-            }
-        }
+        width_ = image.cols;
+        height_ = image.rows;
+        stride_ = width_ * CH;
+        data_ = std::make_unique<ElemType[]>(stride_ * height_);
+        std::copy_n(image.begin<ElemType>(), stride_ * height_, data_.get());
     }
 
     void write(const std::string& filename) {
-        static_assert(std::is_same_v<IMG_T, std::uint8_t>);
-        static_assert(CH == 1 || CH == 3);
+        static_assert(std::is_same_v<ElemType, std::uint8_t>);
 
-        if constexpr (CH == 1) {
-            png::image<png::gray_pixel> image(width_, height_);
-            for (std::size_t y = 0; y < height_; y++) {
-                const auto src_row = this->get_row(y);
-                auto& dst_row = image[y];
-                for (std::size_t x = 0; x < width_; x++) {
-                    dst_row[x] = src_row[x];
-                }
-            }
-            image.write(filename);
-        } else {
-            png::image<png::rgb_pixel> image(width_, height_);
-            for (std::size_t y = 0; y < height_; y++) {
-                const auto src_row = this->get_row(y);
-                auto& dst_row = image[y];
-                for (std::size_t x = 0; x < width_; x++) {
-                    dst_row[x] =
-                        png::rgb_pixel(src_row[x * CH], src_row[x * CH + 1], src_row[x * CH + 2]);
-                }
-            }
-            image.write(filename);
-        }
+        cv::Mat image(height_, width_, CV_8UC(CH));
+        std::copy_n(data_.get(), stride_ * height_, image.begin<ElemType>());
+        cv::imwrite(filename, image);
     }
 
-    const IMG_T* data() const {
+    const ElemType* data() const {
         return data_.get();
     }
 
-    IMG_T* data() {
+    ElemType* data() {
         return data_.get();
     }
 
-    const IMG_T* get_row(const std::size_t index) const {
+    const ElemType* get_row(const std::size_t index) const {
         assert(index < height_);
         return data_.get() + stride_ * index;
     }
 
-    IMG_T* get_row(const std::size_t index) {
+    ElemType* get_row(const std::size_t index) {
         assert(index < height_);
         return data_.get() + stride_ * index;
     }
@@ -127,18 +81,20 @@ public:
     }
 
 private:
-
-    std::unique_ptr<IMG_T[]> data_;
-    std::size_t width_, height_, stride_;
+    std::unique_ptr<ElemType[]> data_;
+    std::size_t width_;
+    std::size_t height_;
+    std::size_t stride_;
 };
 
 struct RunFlags {
     bool run_cpp = true;
     bool run_simd = false;
     bool run_cuda = false;
+    bool dump_imgs = false;
 };
 
-auto parse_flags(const int argc, const char** argv) {
+inline auto parse_flags(const int argc, const char** argv) {
     RunFlags flags;
 
     for (int i = 1; i < argc; i++) {
@@ -151,13 +107,16 @@ auto parse_flags(const int argc, const char** argv) {
         else if (std::string(argv[i]) == "--cuda") {
             flags.run_cuda = true;
         }
+        else if (std::string(argv[i]) == "--dump") {
+            flags.dump_imgs = true;
+        }
     }
 
     return flags;
 }
 
-template <typename IMG_T, int CH>
-void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
+template <typename ElemType, int CH>
+inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType, CH>& img2,
                     bool details = false){
     const auto size = img1.width() * img2.height() * CH;
     auto max_diff = 0;
@@ -178,7 +137,7 @@ void compare_images(const Image<IMG_T, CH>& img1, const Image<IMG_T, CH>& img2,
 }
 
 template <class Fn, class... Args>
-auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args&... args) {
+inline auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args&... args) {
     auto accumulator = 0ll;
 
     for (std::uint32_t i = 0; i <= N; i++) {
@@ -196,8 +155,6 @@ auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, const Args
 
     return accumulator / N;
 }
-
-
 
 }  // anonymous namespace
 

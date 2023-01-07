@@ -12,13 +12,13 @@
 
 int main(const int argc, const char** argv) {
     if (argc < 3) {
-        std::cout << "usage: " << argv[0] << " num_itr [--simd] [--cuda]" << std::endl;
+        std::cout << "usage: " << argv[0] << " num_itr [--simd] [--cuda] [--dump]" << std::endl;
         return 0;
     }
     const auto num_itr = std::stoi(argv[1]);
     const auto flags = parse_flags(argc, argv);
 
-    const Image<IMG_T, 3> src_img(image_color_path, image_width, image_height);
+    const Image<IMG_T, 3> src_img(image_color_path);
     const auto src = src_img.data();
 
     Image<IMG_T, 3> dst_cpp(image_width, image_height);
@@ -46,9 +46,11 @@ int main(const int argc, const char** argv) {
         compare_images(dst_cpp, dst_cuda);
     }
 
-    dst_cpp.write("cpp.png");
-    dst_neon.write("neon.png");
-    dst_cuda.write("cuda.png");
+    if (flags.dump_imgs) {
+        if (flags.run_cpp) { dst_cpp.write("cpp.png"); }
+        if (flags.run_simd) { dst_neon.write("neon.png"); }
+        if (flags.run_cuda) { dst_cuda.write("cuda.png"); }
+    }
 
     return 0;
 }

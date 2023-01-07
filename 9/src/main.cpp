@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
     using IMG_T = std::uint8_t;
 
-    const Image<IMG_T, 3> src_img(image_color_path, image_width, image_height);
+    const Image<IMG_T, 3> src_img(image_color_path);
     const auto src = src_img.data();
 
     Image<IMG_T, 3> dst_cpp_naive(image_width, image_height);

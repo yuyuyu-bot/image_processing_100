@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(image_processing_100)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -O3 -std=c++17 -msse4.1 -fno-tree-vectorize")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations") # Supress NEON_2_SSE warnings.
 set(NVCCFLAGS       "${NVCCFLAGS}       -g -O3 -x=cu -std=c++17 -fmad=false")
 
 find_package(CUDA REQUIRED)
@@ -11,16 +12,15 @@ else()
     message(FATAL_ERROR "CUDA not found.")
 endif()
 
-find_package(PNG REQUIRED)
-if(PNG_FOUND)
-    message("PNG version: " ${PNG_VERSION_STRING})
+find_package(OpenCV REQUIRED)
+if (OpenCV_FOUND)
+    message("OpenCV version: " ${OpenCV_VERSION})
 else()
-    message(FATAL_ERROR "PNG not found.")
+    message(FATAL_ERROR "OpenCV not found.")
 endif()
 
-link_libraries(${CUDA_LIBRARIES} ${PNG_LIBRARIES})
-add_definitions(${PNG_DEFINITIONS})
-include_directories(${CUDA_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+link_libraries(${CUDA_LIBRARIES} ${OpenCV_LIBS})
+include_directories(${CUDA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/3rdparty/neon2sse)
 
 add_subdirectory(1)

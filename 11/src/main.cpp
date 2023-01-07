@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     const auto num_itr = std::stoi(argv[1]);
     const auto dump_flag = std::stoi(argv[2]) != 0;
 
-    const Image<IMG_T, 3> src_img(image_color_path, image_width, image_height);
+    const Image<IMG_T, 3> src_img(image_color_path);
     const auto src = src_img.data();
 
     Image<IMG_T, 3> dst_cpp_naive(image_width, image_height);
