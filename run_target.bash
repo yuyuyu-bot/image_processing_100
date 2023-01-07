@@ -22,6 +22,7 @@ TARGET="all"
 NUM_ITERATIONS=100
 OPTIONS="--cpp"
 
+# parse args
 while (( $# > 0 )); do
     case $1 in
     --build | -b)
