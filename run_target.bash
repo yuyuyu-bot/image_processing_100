@@ -22,7 +22,13 @@ TARGET="all"
 NUM_ITERATIONS=100
 OPTIONS="--cpp"
 
+function print_usage () {
+    echo "Usage: bash run_target.bash [--build(-b) BUILD_DIR] [--target(-t) TARGET] [--itrations(-itr) ITR]"
+    echo "                            [--simd] [--cuda] [--dump] [--help(-h)]"
+}
+
 # parse args
+shift
 while (( $# > 0 )); do
     case $1 in
     --build | -b)
@@ -48,6 +54,7 @@ while (( $# > 0 )); do
             echo "Invalid target."
             exit -1
         fi
+        shift
         ;;
     --iterations | -itr)
         if [ $# -lt 2 ]; then
@@ -55,6 +62,7 @@ while (( $# > 0 )); do
             exit -1
         fi
         NUM_ITERATIONS=$2
+        shift
         ;;
     --simd | --neon)
         OPTIONS="${OPTIONS} --simd"
@@ -62,9 +70,18 @@ while (( $# > 0 )); do
     --cuda)
         OPTIONS="${OPTIONS} --cuda"
         ;;
+    --dump)
+        OPTIONS="${OPTIONS} --dump"
+        ;;
     --help | -h)
-        echo "Usage: bash run_target.bash [--target(-t) TARGET] [--itrations(-itr) ITR]  [--simd] [--cuda] [--help(-h)]"
+        print_usage
         exit 0
+        ;;
+    *)
+        echo "Unknown argument $1"
+        echo ""
+        print_usage
+        exit -1
         ;;
     esac
     shift
