@@ -24,8 +24,8 @@ namespace cuda {
 
 void threshold(const std::uint8_t* const src, std::uint8_t* const dst,
                const std::size_t width, const std::size_t height, const std::uint8_t thresh) {
-    const auto grid_dim = dim3{height};
-    const auto block_dim = dim3{width};
+    const auto grid_dim = dim3{static_cast<std::uint32_t>(height)};
+    const auto block_dim = dim3{static_cast<std::uint32_t>(width)};
 
     threshold_kernel<<<grid_dim, block_dim>>>(src, dst, width, height, thresh);
     CUDASafeCall();

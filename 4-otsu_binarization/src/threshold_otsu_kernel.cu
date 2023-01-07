@@ -166,7 +166,7 @@ void threshold_otsu(const std::uint8_t* const src, std::uint8_t* const dst,
                     const std::size_t width, const std::size_t height,
                     int* const histogram_buffer) {
     {
-        const auto block_dim = dim3{height / 64};
+        const auto block_dim = dim3{static_cast<std::uint32_t>(height / 64)};
         const auto thread_dim = dim3{64};
         cudaMemset((void*)histogram_buffer, 0, 256 * sizeof(int));
 

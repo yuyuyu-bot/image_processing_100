@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(image_processing_100)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -O3 -std=c++17 -msse4.1 -fno-tree-vectorize")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Werror -O3 -std=c++17 -msse4.1 -fno-tree-vectorize")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations") # Supress NEON_2_SSE warnings.
-set(NVCCFLAGS       "${NVCCFLAGS}       -g -O3 -x=cu -std=c++17 -fmad=false")
+set(NVCCFLAGS       "${NVCCFLAGS}       -g -Wall -Wextra -Werror -O3 -x=cu -std=c++17 -fmad=false")
 
 find_package(CUDA REQUIRED)
 if(CUDA_FOUND)
