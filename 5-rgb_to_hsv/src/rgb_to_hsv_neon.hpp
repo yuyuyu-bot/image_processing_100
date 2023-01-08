@@ -22,7 +22,8 @@ void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
     auto dst_ptr = dst;
 
     std::size_t i = 0;
-    for (; i + vector_size < width * height * 3; i += vector_size) {
+    const auto end = width * height * 3 - vector_size;
+    for (; i < end; i += vector_size) {
         const auto&& v_RGB = vld3q_u8(src_ptr);
         const uint8x16_t& v_R = v_RGB.val[0];
         const uint8x16_t& v_G = v_RGB.val[1];

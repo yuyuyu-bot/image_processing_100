@@ -7,7 +7,6 @@ namespace cpp {
 
 void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
                 const std::size_t width, const std::size_t height) {
-
     for (std::size_t i = 0, end = width * height * 3; i < end; i += 3) {
 #ifdef USE_FIXED_POINT
         constexpr auto N120 = 120u << 8;     // u8.8
