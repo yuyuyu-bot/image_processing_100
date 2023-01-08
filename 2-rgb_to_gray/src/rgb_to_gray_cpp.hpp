@@ -15,8 +15,7 @@ void rgb_to_gray(const std::uint8_t* const src, std::uint8_t* const dst,
     auto dst_ptr = dst;
 
     for (std::size_t i = 0; i < width * height; i++) {
-        *dst_ptr = (r_coeff * src_ptr[0] + g_coeff * src_ptr[1] + b_coeff * src_ptr[2])
-                    >> normalize_shift_bits;
+        *dst_ptr = (r_coeff * src_ptr[0] + g_coeff * src_ptr[1] + b_coeff * src_ptr[2]) >> normalize_shift_bits;
         src_ptr += 3;
         dst_ptr++;
     }

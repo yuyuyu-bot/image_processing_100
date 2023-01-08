@@ -20,14 +20,14 @@ void threshold(const std::uint8_t* const src, std::uint8_t* const dst,
     std::size_t i = 0;
     for (; i + vector_size < width * height; i += vector_size) {
         const auto v_src = vld1q_u8(src_ptr);
-        vst1q_u8(dst_ptr, vcgeq_u8(v_src, vdupq_n_u8(thresh)));
+        vst1q_u8(dst_ptr, vcgtq_u8(v_src, vdupq_n_u8(thresh)));
 
         src_ptr += vector_size;
         dst_ptr += vector_size;
     }
 
     for (; i < width * height; i++) {
-        dst[i] = src[i] < thresh ? min_value : max_value;
+        dst[i] = src[i] <= thresh ? min_value : max_value;
     }
 }
 

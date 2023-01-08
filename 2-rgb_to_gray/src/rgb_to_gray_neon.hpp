@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "NEON_2_SSE.h"
+#include "neon_utils.hpp"
 
 
 namespace neon {
@@ -18,39 +19,27 @@ void rgb_to_gray(const std::uint8_t* const src, std::uint8_t* const dst,
     auto src_ptr = src;
     auto dst_ptr = dst;
 
-    const auto u8_to_u32 = [](const uint8x8_t& v_u8) {
-        const auto v_u16 = vmovl_u8(v_u8);
-        const auto v_u16_l = vget_low_u16(v_u16);
-        const auto v_u16_h = vget_high_u16(v_u16);
-        return std::make_pair(vmovl_u16(v_u16_l), vmovl_u16(v_u16_h));
-    };
-
-    const auto u32_to_u8 = [](const uint32x4_t& v_u32_l, const uint32x4_t& v_u32_h) {
-        const auto v_u16_l = vmovn_u32(v_u32_l);
-        const auto v_u16_h = vmovn_u32(v_u32_h);
-        const auto v_u16 = vcombine_u16(v_u16_l, v_u16_h);
-        return vmovn_u16(v_u16);
-    };
-
     std::size_t i = 0;
     for (; i + vector_size < width * height; i += vector_size) {
         const auto v_rgb = vld3_u8(src_ptr);
-        const auto [v_r_f32_l, v_r_f32_h] = u8_to_u32(v_rgb.val[0]);
-        const auto [v_g_f32_l, v_g_f32_h] = u8_to_u32(v_rgb.val[1]);
-        const auto [v_b_f32_l, v_b_f32_h] = u8_to_u32(v_rgb.val[2]);
+        const auto v_r_f32 = u8x8_to_u32x4x2(v_rgb.val[0]);
+        const auto v_g_f32 = u8x8_to_u32x4x2(v_rgb.val[1]);
+        const auto v_b_f32 = u8x8_to_u32x4x2(v_rgb.val[2]);
 
-        const auto v_rc_u32_l = vmulq_n_u32(v_r_f32_l, r_coeff);
-        const auto v_rc_u32_h = vmulq_n_u32(v_r_f32_h, r_coeff);
-        const auto v_gc_u32_l = vmulq_n_u32(v_g_f32_l, g_coeff);
-        const auto v_gc_u32_h = vmulq_n_u32(v_g_f32_h, g_coeff);
-        const auto v_bc_u32_l = vmulq_n_u32(v_b_f32_l, b_coeff);
-        const auto v_bc_u32_h = vmulq_n_u32(v_b_f32_h, b_coeff);
+        const auto v_rc_u32_l = vmulq_n_u32(v_r_f32.val[0], r_coeff);
+        const auto v_rc_u32_h = vmulq_n_u32(v_r_f32.val[1], r_coeff);
+        const auto v_gc_u32_l = vmulq_n_u32(v_g_f32.val[0], g_coeff);
+        const auto v_gc_u32_h = vmulq_n_u32(v_g_f32.val[1], g_coeff);
+        const auto v_bc_u32_l = vmulq_n_u32(v_b_f32.val[0], b_coeff);
+        const auto v_bc_u32_h = vmulq_n_u32(v_b_f32.val[1], b_coeff);
 
         const auto v_gray_u32_l = vaddq_u32(v_rc_u32_l, vaddq_u32(v_gc_u32_l, v_bc_u32_l));
         const auto v_gray_u32_h = vaddq_u32(v_rc_u32_h, vaddq_u32(v_gc_u32_h, v_bc_u32_h));
 
-        const auto v_gray = u32_to_u8(vshrq_n_u32(v_gray_u32_l, normalize_shift_bits),
-                                      vshrq_n_u32(v_gray_u32_h, normalize_shift_bits));
+        const auto v_gray = u32x4x2_to_u8x8(
+            uint32x4x2_t{
+                vshrq_n_u32(v_gray_u32_l, normalize_shift_bits),
+                vshrq_n_u32(v_gray_u32_h, normalize_shift_bits) });
         vst1_u8(dst_ptr, v_gray);
 
         src_ptr += 3 * vector_size;

@@ -151,7 +151,7 @@ inline auto parse_flags(const int argc, const char** argv) {
 }
 
 template <typename ElemType, int CH>
-inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType, CH>& img2, bool details = false){
+inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType, CH>& img2){
     const auto size = img1.width() * img2.height() * CH;
     auto max_diff = 0;
     for (std::size_t i = 0; i < size; i++) {
@@ -159,10 +159,38 @@ inline void compare_images(const Image<ElemType, CH>& img1, const Image<ElemType
         const auto actual = static_cast<int>(img2.data()[i]);
         const auto diff = std::abs(expected - actual);
         max_diff = std::max(max_diff, diff);
-        if (details && diff > 0) {
-            std::printf("expected: %d, actual: %d at (%d, %d)\n",
-                        static_cast<int>(expected), static_cast<int>(actual),
-                        static_cast<int>(i % img1.width()), static_cast<int>(i / img1.width()));
+    }
+    if (max_diff > 0) {
+        std::cout << "\tImages did not match. max diff: " << max_diff << std::endl;
+    }
+}
+
+inline void compare_hsv_images(const Image<std::uint8_t, 3>& img1, const Image<std::uint8_t, 3>& img2, const std::uint8_t h_max = 180){
+    const auto size = img1.width() * img2.height();
+    auto max_diff = 0;
+    for (std::size_t i = 0; i < size; i++) {
+        // H
+        {
+            auto expected = static_cast<int>(img1.data()[i * 3]);
+            if (expected == h_max) { expected = 0; }
+            auto actual = static_cast<int>(img2.data()[i * 3]);
+            if (actual == h_max) { actual = 0; }
+            const auto diff = std::abs(expected - actual);
+            max_diff = std::max(max_diff, diff);
+        }
+        // S
+        {
+            const auto expected = static_cast<int>(img1.data()[i * 3 + 1]);
+            const auto actual = static_cast<int>(img2.data()[i * 3 + 1]);
+            const auto diff = std::abs(expected - actual);
+            max_diff = std::max(max_diff, diff);
+        }
+        // V
+        {
+            const auto expected = static_cast<int>(img1.data()[i * 3 + 2]);
+            const auto actual = static_cast<int>(img2.data()[i * 3 + 2]);
+            const auto diff = std::abs(expected - actual);
+            max_diff = std::max(max_diff, diff);
         }
     }
     if (max_diff > 0) {
@@ -181,6 +209,10 @@ inline auto measure(const std::uint32_t N, Fn& fn, const char* const fn_str, con
 
         if (N == 1 || i > 0) {
             accumulator += std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
+        }
+
+        if (N == 1) {
+            break;
         }
     }
 

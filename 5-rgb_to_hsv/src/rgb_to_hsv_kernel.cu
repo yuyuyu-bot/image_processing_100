@@ -19,22 +19,23 @@ __global__ void rgb_to_hsv_kernel(const std::uint8_t* const src, std::uint8_t* c
     const auto vmax = max(R, max(G, B));
     const auto vmin = min(R, min(G, B));
 
-    int H;
+    float H;
     if (vmin == vmax) {
-        H = 0;
-    } else if (vmin == B) {
-        H = 60 * (G - R) / (vmax - vmin) + 60;
-    } else if (vmin == R) {
-        H = 60 * (B - G) / (vmax - vmin) + 180;
-    } else {
-        H = 60 * (R - B) / (vmax - vmin) + 300;
+        H = 0.f;
+    } else if (vmax == R) {
+        H = 60.f * (G - B) / (vmax - vmin);
+        H = H < 0 ? H + 360.f : H;
+    } else if (vmax == G) {
+        H = 60.f * (B - R) / (vmax - vmin) + 120.f;
+    } else { // vmax == B
+        H = 60.f * (R - G) / (vmax - vmin) + 240.f;
     }
 
-    const auto S = vmax - vmin;
+    const auto S = vmax != 0 ? 255.f * (vmax - vmin) / vmax : 0;
     const auto V = vmax;
 
-    dst[idx * 3 + 0] = static_cast<std::uint8_t>(H / 360.f * 255.f);
-    dst[idx * 3 + 1] = S;
+    dst[idx * 3 + 0] = static_cast<std::uint8_t>(H / 2.f + 0.5f);
+    dst[idx * 3 + 1] = static_cast<std::uint8_t>(S + 0.5f);
     dst[idx * 3 + 2] = V;
 }
 

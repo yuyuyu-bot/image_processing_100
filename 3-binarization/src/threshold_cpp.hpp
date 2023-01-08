@@ -13,7 +13,7 @@ void threshold(const std::uint8_t* const src, std::uint8_t* const dst,
 
     std::transform(src, src + width * height, dst,
         [&thresh, &min_value, &max_value](const auto& val) {
-            return val < thresh ? min_value : max_value;
+            return val <= thresh ? min_value : max_value;
         });
 }
 
