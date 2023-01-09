@@ -12,12 +12,7 @@
 
 
 int main(const int argc, const char** argv) {
-    if (argc < 3) {
-        std::cout << "usage: " << argv[0] << " num_itr [--simd] [--cuda] [--dump]" << std::endl;
-        return 0;
-    }
-    const auto num_itr = std::stoi(argv[1]);
-    const auto flags = parse_flags(argc, argv);
+    const auto [num_itr, flags] = parse_args(argc, argv);
 
     const Image<IMG_T, 1> src_img(image_gray_path);
     const auto src = src_img.data();

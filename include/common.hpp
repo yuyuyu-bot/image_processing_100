@@ -129,25 +129,37 @@ struct RunFlags {
     bool dump_imgs = false;
 };
 
-inline auto parse_flags(const int argc, const char** argv) {
+inline auto parse_args(const int argc, const char** argv) {
+    int num_itr = 100;
     RunFlags flags;
 
-    for (int i = 1; i < argc; i++) {
-        if (std::string(argv[i]) == "--cpp") {
+    for (int i = 1; i < argc;) {
+        if (std::string(argv[i]) == "--itr") {
+            if (i + 1 < argc) {
+                std::cerr << "Missing argument for itr." << std::endl;
+                std::exit(EXIT_FAILURE);
+            }
+            num_itr = std::stoi(argv[i + 1]);
+            i += 2;
+        }
+        else if (std::string(argv[i]) == "--cpp") {
             flags.run_cpp = true;
+            i++;
         }
         else if (std::string(argv[i]) == "--simd") {
             flags.run_simd = true;
+            i++;
         }
         else if (std::string(argv[i]) == "--cuda") {
             flags.run_cuda = true;
+            i++;
         }
         else if (std::string(argv[i]) == "--dump") {
             flags.dump_imgs = true;
         }
     }
 
-    return flags;
+    return std::make_pair(num_itr, flags);
 }
 
 template <typename ElemType, int CH>
