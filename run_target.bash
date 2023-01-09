@@ -87,10 +87,11 @@ while (( $# > 0 )); do
     shift
 done
 
+OPTIONS="--itr ${NUM_ITERATIONS} ${OPTIONS}"
+
 # print params
 echo "Build dir      : ${BUILD_DIR}"
 echo "Target         : ${TARGET}"
-echo "Iterations     : ${NUM_ITERATIONS}"
 echo "Passed options : ${OPTIONS}"
 echo ""
 

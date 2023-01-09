@@ -135,7 +135,7 @@ inline auto parse_args(const int argc, const char** argv) {
 
     for (int i = 1; i < argc;) {
         if (std::string(argv[i]) == "--itr") {
-            if (i + 1 < argc) {
+            if (i + 1 >= argc) {
                 std::cerr << "Missing argument for itr." << std::endl;
                 std::exit(EXIT_FAILURE);
             }
@@ -156,6 +156,10 @@ inline auto parse_args(const int argc, const char** argv) {
         }
         else if (std::string(argv[i]) == "--dump") {
             flags.dump_imgs = true;
+            i++;
+        }
+        else {
+            i++;
         }
     }
 
