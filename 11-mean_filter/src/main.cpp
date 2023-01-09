@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 #include <string>
 
 #include "common.hpp"
@@ -21,6 +22,7 @@ int main(const int argc, const char** argv) {
     const Image<IMG_T, 3> src_img(image_color_path);
     const auto src = src_img.data();
 
+    Image<IMG_T, 3> dst_bench(image_width, image_height);
     Image<IMG_T, 3> dst_cpp_naive(image_width, image_height);
     Image<IMG_T, 3> dst_cpp_integral(image_width, image_height);
     Image<IMG_T, 3> dst_cpp_sliding(image_width, image_height);
@@ -31,33 +33,41 @@ int main(const int argc, const char** argv) {
     constexpr auto ksize = 15;
     static_assert(ksize % 2 == 1);
 
+    // benchmark
+    {
+        const cv::Mat src_mat(image_height, image_width, CV_8UC3, const_cast<IMG_T*>(src));
+        cv::Mat dst_mat(image_height, image_width, CV_8UC3, dst_bench.data());
+        MEASURE(num_itr, cv::boxFilter, src_mat, dst_mat, -1, cv::Size{ ksize, ksize }, cv::Point(-1, -1), true, cv::BORDER_REPLICATE);
+    }
+
     if (flags.run_cpp) {
         const auto dst = dst_cpp_naive.data();
         MEASURE(num_itr, cpp::mean_filter_naive, src, dst, image_width, image_height, ksize);
+        compare_images(dst_bench, dst_cpp_naive);
     }
 
     if (flags.run_cpp) {
         const auto dst = dst_cpp_integral.data();
         MEASURE(num_itr, cpp::mean_filter_integral, src, dst, image_width, image_height, ksize);
-        compare_images(dst_cpp_naive, dst_cpp_integral);
+        compare_images(dst_bench, dst_cpp_integral);
     }
 
     if (flags.run_cpp) {
         const auto dst = dst_cpp_sliding.data();
         MEASURE(num_itr, cpp::mean_filter_sliding, src, dst, image_width, image_height, ksize);
-        compare_images(dst_cpp_naive, dst_cpp_sliding);
+        compare_images(dst_bench, dst_cpp_sliding);
     }
 
     if (flags.run_cpp) {
         const auto dst = dst_cpp_separate.data();
         MEASURE(num_itr, cpp::mean_filter_separate, src, dst, image_width, image_height, ksize);
-        compare_images(dst_cpp_naive, dst_cpp_separate);
+        compare_images(dst_bench, dst_cpp_separate);
     }
 
     if (flags.run_simd) {
         const auto dst = dst_neon_separate.data();
         MEASURE(num_itr, neon::mean_filter_separate, src, dst, image_width, image_height, ksize);
-        compare_images(dst_cpp_naive, dst_neon_separate);
+        compare_images(dst_bench, dst_neon_separate);
     }
 
     if (flags.run_cuda) {
@@ -67,10 +77,11 @@ int main(const int argc, const char** argv) {
         MEASURE(num_itr, cuda::mean_filter, d_src.get(), d_dst.get(), image_width, image_height, ksize);
 
         d_dst.download(dst_cuda.data());
-        compare_images(dst_cpp_integral, dst_cuda);
+        compare_images(dst_bench, dst_cuda);
     }
 
     if (flags.dump_imgs) {
+        dst_bench.write("bench.png");
         if (flags.run_cpp) { dst_cpp_naive.write("cpp_naive.png"); }
         if (flags.run_cpp) { dst_cpp_integral.write("cpp_integral.png"); }
         if (flags.run_cpp) { dst_cpp_sliding.write("cpp_sliding.png"); }
