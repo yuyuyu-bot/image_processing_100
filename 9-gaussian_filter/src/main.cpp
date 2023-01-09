@@ -37,7 +37,7 @@ int main(const int argc, const char** argv) {
     {
         const cv::Mat src_mat(image_height, image_width, CV_8UC3, const_cast<IMG_T*>(src));
         cv::Mat dst_mat(image_height, image_width, CV_8UC3, dst_bench.data());
-        MEASURE(num_itr, cv::GaussianBlur, src_mat, dst_mat, cv::Size{ ksize, ksize }, sigma, sigma, cv::BORDER_REPLICATE);
+        MEASURE(num_itr, cv::GaussianBlur, src_mat, dst_mat, cv::Size{ksize, ksize}, sigma, sigma, cv::BORDER_REPLICATE);
     }
 
     if (flags.run_cpp) {

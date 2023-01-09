@@ -90,8 +90,8 @@ void rgb_to_hsv(const std::uint8_t* const src, std::uint8_t* const dst,
         {
             const uint32x4x2_t&& v_diff_u32_low  = u8x8_to_u32x4x2(vget_low_u8(v_vrange));
             const uint32x4x2_t&& v_diff_u32_high = u8x8_to_u32x4x2(vget_high_u8(v_vrange));
-            float32x4x2_t v_S_f32_low { vcvtq_f32_u32(v_diff_u32_low.val[0]),  vcvtq_f32_u32(v_diff_u32_low.val[1]) };
-            float32x4x2_t v_S_f32_high{ vcvtq_f32_u32(v_diff_u32_high.val[0]), vcvtq_f32_u32(v_diff_u32_high.val[1]) };
+            float32x4x2_t v_S_f32_low {vcvtq_f32_u32(v_diff_u32_low.val[0]),  vcvtq_f32_u32(v_diff_u32_low.val[1])};
+            float32x4x2_t v_S_f32_high{vcvtq_f32_u32(v_diff_u32_high.val[0]), vcvtq_f32_u32(v_diff_u32_high.val[1])};
 
             const uint32x4x2_t&& v_vmax_u32_low  = u8x8_to_u32x4x2(vget_low_u8(v_vmax));
             const uint32x4x2_t&& v_vmax_u32_high = u8x8_to_u32x4x2(vget_high_u8(v_vmax));

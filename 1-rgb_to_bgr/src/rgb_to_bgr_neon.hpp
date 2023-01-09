@@ -15,7 +15,7 @@ void rgb_to_bgr(const std::uint8_t* const src, std::uint8_t* const dst,
     const auto end = width * height - vector_size;
     for (i = 0; i < end; i += vector_size) {
         const auto v_rgb = vld3q_u8(&src[i * 3]);
-        const uint8x16x3_t v_bgr{ v_rgb.val[2], v_rgb.val[1], v_rgb.val[0] };
+        const uint8x16x3_t v_bgr{v_rgb.val[2], v_rgb.val[1], v_rgb.val[0]};
         vst3q_u8(&dst[i * 3], v_bgr);
     }
     // remainder

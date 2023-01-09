@@ -77,7 +77,7 @@ void average_pooling(const std::uint8_t* const src, std::uint8_t* const dst,
             const auto rave = static_cast<std::uint8_t>(rsum / (ksize * ksize));
             const auto gave = static_cast<std::uint8_t>(gsum / (ksize * ksize));
             const auto bave = static_cast<std::uint8_t>(bsum / (ksize * ksize));
-            const auto vdst = uint8x8x3_t{ vdup_n_u8(rave), vdup_n_u8(gave), vdup_n_u8(bave) };
+            const auto vdst = uint8x8x3_t{vdup_n_u8(rave), vdup_n_u8(gave), vdup_n_u8(bave)};
 
             for (int ky = -khalf; ky <= khalf && y + ky < height; ky++) {
                 int kx = -khalf;

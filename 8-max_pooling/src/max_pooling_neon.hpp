@@ -62,7 +62,7 @@ void max_pooling(const std::uint8_t* const src, std::uint8_t* const dst,
                 bmax = std::max(bmax, abmax[i]);
             }
 
-            const auto vdst = uint8x16x3_t{ vdupq_n_u8(rmax), vdupq_n_u8(gmax), vdupq_n_u8(bmax) };
+            const auto vdst = uint8x16x3_t{vdupq_n_u8(rmax), vdupq_n_u8(gmax), vdupq_n_u8(bmax)};
 
             for (int ky = -khalf; ky <= khalf && y + ky < height; ky++) {
                 int kx = -khalf;

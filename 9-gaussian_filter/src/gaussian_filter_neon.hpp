@@ -33,9 +33,9 @@ void gaussian_filter_separate(const std::uint8_t* const src, std::uint8_t* const
     for (std::size_t y = 0; y < height; y++) {
         std::size_t x = 0;
         for (; x + vector_size < width; x += vector_size) {
-            float32x4x2_t v_rsum{ vdupq_n_f32(0.f), vdupq_n_f32(0.f) };
-            float32x4x2_t v_gsum{ vdupq_n_f32(0.f), vdupq_n_f32(0.f) };
-            float32x4x2_t v_bsum{ vdupq_n_f32(0.f), vdupq_n_f32(0.f) };
+            float32x4x2_t v_rsum{vdupq_n_f32(0.f), vdupq_n_f32(0.f)};
+            float32x4x2_t v_gsum{vdupq_n_f32(0.f), vdupq_n_f32(0.f)};
+            float32x4x2_t v_bsum{vdupq_n_f32(0.f), vdupq_n_f32(0.f)};
             int kidx = 0;
             for (int k = -khalf; k <= khalf; k++) {
                 const auto sy = std::clamp(static_cast<int>(y) + k, 0, static_cast<int>(height) - 1);
@@ -53,8 +53,8 @@ void gaussian_filter_separate(const std::uint8_t* const src, std::uint8_t* const
                 v_bsum.val[1] = vmlaq_f32(v_bsum.val[1], vcvtq_f32_u32(v_b_u32x4x2.val[1]), v_kernel_value);
             }
 
-            const float32x4x3_t v_rgb_low{ v_rsum.val[0], v_gsum.val[0], v_bsum.val[0] };
-            const float32x4x3_t v_rgb_high{ v_rsum.val[1], v_gsum.val[1], v_bsum.val[1] };
+            const float32x4x3_t v_rgb_low{v_rsum.val[0], v_gsum.val[0], v_bsum.val[0]};
+            const float32x4x3_t v_rgb_high{v_rsum.val[1], v_gsum.val[1], v_bsum.val[1]};
             vst3q_f32(&vertical_sum[stride * y + (x + 0) * 3], v_rgb_low);
             vst3q_f32(&vertical_sum[stride * y + (x + 4) * 3], v_rgb_high);
         }
