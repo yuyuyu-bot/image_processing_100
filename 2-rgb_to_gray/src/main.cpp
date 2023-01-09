@@ -7,6 +7,7 @@
 
 #include "common.hpp"
 #include "device_buffer.hpp"
+#include "rgb_to_gray_avx2.hpp"
 #include "rgb_to_gray_cpp.hpp"
 #include "rgb_to_gray_cuda.hpp"
 #include "rgb_to_gray_neon.hpp"
@@ -38,6 +39,12 @@ int main(const int argc, const char** argv) {
     if (flags.run_simd) {
         const auto dst = dst_neon.data();
         MEASURE(num_itr, neon::rgb_to_gray, src, dst, image_width, image_height);
+        compare_images(dst_bench, dst_neon);
+    }
+
+    if (flags.run_simd) {
+        const auto dst = dst_neon.data();
+        MEASURE(num_itr, avx2::rgb_to_gray, src, dst, image_width, image_height);
         compare_images(dst_bench, dst_neon);
     }
 
